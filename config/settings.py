@@ -3,18 +3,30 @@ import os
 from decimal import Decimal
 from pathlib import Path
 
+import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Em produção, defina DJANGO_SECRET_KEY, DJANGO_DEBUG=0 e DJANGO_ALLOWED_HOSTS.
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY", "dev-only-troque-esta-chave-em-producao"
-)
-DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = [
-    h.strip()
-    for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-    if h.strip()
-]
+
+def _lista(nome, padrao=""):
+    return [v.strip() for v in os.environ.get(nome, padrao).split(",") if v.strip()]
+
+
+def _sim(nome, padrao):
+    return os.environ.get(nome, "1" if padrao else "0").strip().lower() in ("1", "true", "sim", "yes")
+
+
+# Em produção, defina DJANGO_DEBUG=0, DJANGO_SECRET_KEY, DJANGO_ALLOWED_HOSTS e DATABASE_URL (veja .env.example).
+DEBUG = _sim("DJANGO_DEBUG", True)
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("Defina DJANGO_SECRET_KEY em produção.")
+    SECRET_KEY = "dev-only-troque-esta-chave-em-producao"
+ALLOWED_HOSTS = _lista("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+# Origens com esquema, ex.: https://margaretschool.com.br,https://www.margaretschool.com.br
+CSRF_TRUSTED_ORIGINS = _lista("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -37,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -66,12 +79,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+# PostgreSQL via DATABASE_URL, ex.: postgres://usuario:senha@localhost:5432/margaret_school
+# Sem DATABASE_URL (só em desenvolvimento) usa o SQLite local.
+if os.environ.get("DATABASE_URL"):
+    DATABASES = {"default": dj_database_url.config(
+        conn_max_age=int(os.environ.get("DB_CONN_MAX_AGE", "60")),
+        conn_health_checks=True,
+        ssl_require=_sim("DB_SSL_REQUIRE", False),
+    )}
+elif DEBUG:
+    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
+else:
+    raise ImproperlyConfigured("Defina DATABASE_URL (PostgreSQL) em produção.")
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -88,13 +107,21 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Em produção os arquivos estáticos saem pelo WhiteNoise, comprimidos e com nome versionado
+# (rode "python manage.py collectstatic" a cada deploy).
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG
+                    else "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 # Fotos das galerias ficam FORA de MEDIA_ROOT: só saem pelo sistema, respeitando quem pode ver cada álbum.
-MIDIA_PRIVADA = BASE_DIR / "midia_privada"
+MIDIA_PRIVADA = Path(os.environ.get("DJANGO_MIDIA_PRIVADA", BASE_DIR / "midia_privada"))
 
-# Fotos dos alunos (enviadas pela secretaria)
+# Uploads (fotos dos alunos, comprovantes, banners). Saem pelo sistema (core.views.midia):
+# banners dos anúncios são públicos; o resto só para a equipe logada.
 MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(os.environ.get("DJANGO_MEDIA_ROOT", BASE_DIR / "media"))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -139,4 +166,32 @@ FINANCEIRO = {
 CALENDARIO = {
     "uf": os.environ.get("CALENDARIO_UF", "RN"),
     "municipio": os.environ.get("CALENDARIO_MUNICIPIO", "Tibau do Sul"),
+}
+
+
+# ---------- Segurança em produção ----------
+if not DEBUG:
+    # Atrás de um proxy (Nginx, Render, Railway...) que repassa X-Forwarded-Proto.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = _sim("DJANGO_SSL_REDIRECT", True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_HSTS_SECONDS", "31536000"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _sim("DJANGO_HSTS_SUBDOMAINS", False)
+    SECURE_HSTS_PRELOAD = False
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = "same-origin"
+    X_FRAME_OPTIONS = "DENY"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 60 * 60 * 10  # 10 horas: um dia de trabalho na secretaria
+
+# Logs no console (o servidor/serviço de hospedagem recolhe a saída).
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"simples": {"format": "{asctime} {levelname} {name}: {message}", "style": "{"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simples"}},
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {"django": {"handlers": ["console"], "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
+                           "propagate": False}},
 }

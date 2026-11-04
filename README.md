@@ -213,10 +213,72 @@ CNPJ, endereço, cidade (foro), telefone, atos oficiais, direção e os percentu
 `FINANCEIRO` e `CALENDARIO` em `config/settings.py` (que também podem vir de variáveis de ambiente, como `ESCOLA_CNPJ`).
 O texto do contrato é um **modelo**: peça a revisão de um advogado antes de usar.
 
-## Produção
+## Produção (PostgreSQL)
 
-- Defina `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0` e `DJANGO_ALLOWED_HOSTS`.
-- Fotos dos alunos ficam em `media/`. Em desenvolvimento o Django as serve; em produção,
-  sirva `media/` por um caminho protegido (os dados são de crianças) e faça backup da pasta e do banco.
-- Troque o SQLite por PostgreSQL quando o uso crescer.
+O projeto lê tudo de **variáveis de ambiente**. O modelo completo está em [.env.example](.env.example).
+Com `DJANGO_DEBUG=0`, o sistema **não sobe** sem `DJANGO_SECRET_KEY` e `DATABASE_URL`, liga HTTPS (cookies seguros, HSTS,
+redirecionamento) e serve os arquivos estáticos pelo WhiteNoise.
+
+| Variável | Exemplo |
+| --- | --- |
+| `DJANGO_DEBUG` | `0` |
+| `DJANGO_SECRET_KEY` | gere com `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
+| `DJANGO_ALLOWED_HOSTS` | `margaretschool.com.br,www.margaretschool.com.br` |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | `https://margaretschool.com.br,https://www.margaretschool.com.br` |
+| `DATABASE_URL` | `postgres://margaret:SENHA@localhost:5432/margaret_school` |
+| `DB_SSL_REQUIRE` | `1` em bancos gerenciados que exigem SSL |
+
+### 1. Criar o banco
+
+```sql
+CREATE USER margaret WITH PASSWORD 'troque-esta-senha';
+CREATE DATABASE margaret_school OWNER margaret ENCODING 'UTF8';
+```
+
+### 2. Instalar e publicar (a cada deploy)
+
+```bash
+pip install -r requirements.txt            # inclua requirements-pdf.txt para o botão "Baixar PDF"
+python manage.py migrate
+python manage.py collectstatic --noinput
+python manage.py check --deploy
+gunicorn config.wsgi --bind 0.0.0.0:8000 --workers 3 --timeout 120
+```
+
+Na primeira vez, crie o administrador com `python manage.py createsuperuser` (ou traga os dados do SQLite, abaixo).
+
+O `check --deploy` avisa sobre `SECURE_HSTS_INCLUDE_SUBDOMAINS` e `SECURE_HSTS_PRELOAD`. Os dois ficam desligados
+de propósito: ligue `DJANGO_HSTS_SUBDOMAINS=1` só se **todos** os subdomínios tiverem HTTPS.
+
+### 3. Proxy (Nginx ou a hospedagem)
+
+- Termine o HTTPS no proxy e repasse `X-Forwarded-Proto` e `Host` para o Gunicorn.
+- Aumente o limite de envio para os álbuns de fotos (até 30 fotos de 12 MB por vez), por exemplo `client_max_body_size 400M;`.
+- **Não** sirva `media/` nem `midia_privada/` direto pelo proxy: o sistema entrega esses arquivos conferindo quem pode
+  ver (banners são públicos; fotos de alunos e comprovantes, só para a equipe; fotos de álbuns, conforme a visibilidade).
+
+### Levar os dados do SQLite para o PostgreSQL
+
+```bash
+# 1) Com o SQLite (sem DATABASE_URL), exporte:
+python -X utf8 manage.py dumpdata --natural-foreign --natural-primary   -e contenttypes -e auth.permission -e admin.logentry -e sessions --indent 2 -o dados.json
+# 2) Com DATABASE_URL apontando para o PostgreSQL vazio:
+python manage.py migrate
+python -X utf8 manage.py loaddata dados.json
+```
+
+Copie também as pastas `media/` e `midia_privada/` para o servidor. O `dados.json` tem dados pessoais:
+apague-o depois da importação.
+
+### Backup
+
+Faça cópia diária do banco **e** das duas pastas de arquivos:
+
+```bash
+pg_dump --format=custom --file=margaret-$(date +%F).dump "$DATABASE_URL"
+tar czf arquivos-$(date +%F).tar.gz media midia_privada
+```
+
+Para restaurar: `pg_restore --clean --no-owner --dbname "$DATABASE_URL" margaret-AAAA-MM-DD.dump`.
+
 # margaretschool

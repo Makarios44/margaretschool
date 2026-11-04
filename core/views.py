@@ -1,7 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib.auth.views import LoginView
+from django.conf import settings
+from django.http import Http404
 from django.shortcuts import redirect, render
+from django.views.static import serve
 
 
 def home(request):
@@ -51,3 +54,21 @@ def dashboard(request):
         "proximos": proximos_eventos(6, interno=request.user.is_staff),
         "pre_pendentes": pendentes,
     })
+
+
+# Pastas de MEDIA_ROOT que qualquer visitante pode abrir (banners da página inicial).
+MIDIA_PUBLICA = ("anuncios/",)
+
+
+def midia(request, caminho):
+    """Entrega os uploads em desenvolvimento e em produção.
+
+    Banners dos anúncios são públicos; fotos de alunos e comprovantes de despesa só para a equipe.
+    """
+    publico = caminho.startswith(MIDIA_PUBLICA)
+    if not publico and not (request.user.is_authenticated and request.user.is_staff):
+        raise Http404  # não confirma nem que o arquivo existe
+    resposta = serve(request, caminho, document_root=settings.MEDIA_ROOT)  # já bloqueia "../"
+    resposta["Cache-Control"] = "public, max-age=86400" if publico else "private, no-store"
+    resposta["X-Content-Type-Options"] = "nosniff"
+    return resposta

@@ -1,2 +1,7 @@
-Django>=5.0,<6.0
+Django>=5.2,<6.0
 Pillow>=10.0
+# Produção
+psycopg[binary]>=3.2      # driver do PostgreSQL
+dj-database-url>=2.2      # lê DATABASE_URL
+whitenoise>=6.7           # serve os arquivos estáticos
+gunicorn>=23.0; sys_platform != "win32"   # servidor de aplicação (Linux)

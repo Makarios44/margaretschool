@@ -1,8 +1,7 @@
-from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from core.views import midia
 from pre_matriculas.views import formulario_publico
 
 urlpatterns = [
@@ -17,5 +16,6 @@ urlpatterns = [
     path("", include("divulgacao.urls")),
     path("pre-matricula/<str:token>/", formulario_publico, name="pre_matricula_publica"),
     path("pre-matriculas/", include("pre_matriculas.urls")),
+    path("media/<path:caminho>", midia, name="midia"),
     path("", include("core.urls")),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
