@@ -219,3 +219,4 @@ O texto do contrato é um **modelo**: peça a revisão de um advogado antes de u
 - Fotos dos alunos ficam em `media/`. Em desenvolvimento o Django as serve; em produção,
   sirva `media/` por um caminho protegido (os dados são de crianças) e faça backup da pasta e do banco.
 - Troque o SQLite por PostgreSQL quando o uso crescer.
+# margaretschool
