@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:860px">
+  <div class="page-bar"><div><h1 class="page-title mb-1">{{ titulo }}</h1>{% if subtitulo %}<p class="mb-0 text-secondary">{{ subtitulo }}</p>{% endif %}</div></div>
+  <form method="post" class="panel" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="row g-3">
+      {% for field in form %}
+        {% if field.name == "perfil" %}
+          <div class="col-12">
+            <span class="form-label d-block">{{ field.label }}</span>
+            {% for radio in field %}
+              <div class="form-check mb-1"><input class="form-check-input" type="radio" name="{{ field.html_name }}" id="{{ radio.id_for_label }}" value="{{ radio.data.value }}" {% if radio.data.selected %}checked{% endif %}><label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>
+            {% endfor %}
+            {% for e in field.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          </div>
+        {% else %}
+          {% include "partials/field.html" with field=field col="col-md-6" %}
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="d-flex gap-2 justify-content-end mt-4">
+      <a class="btn btn-outline-primary" href="{% url voltar %}">Cancelar</a>
+      <button class="btn btn-primary" type="submit">Salvar</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

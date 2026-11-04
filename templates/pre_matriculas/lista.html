@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Pré-matrículas | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div><h1 class="page-title mb-1">Pré-matrículas online</h1><p class="mb-0 text-secondary">Solicitações enviadas pelas famílias.</p></div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'pre_matricula_links' %}">Links gerados</a>
+      <a class="btn btn-primary" href="{% url 'pre_matricula_criar_link' %}"><i class="bi bi-link-45deg" aria-hidden="true"></i> Gerar link</a>
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <a class="btn btn-sm {% if not status_atual %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'pre_matricula_lista' %}">Todas</a>
+    {% for value, label in status_choices %}<a class="btn btn-sm {% if status_atual == value %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?status={{ value }}">{{ label }}</a>{% endfor %}
+  </div>
+  {% if page_obj %}
+  <div class="table-responsive">
+    <table class="table table-ms align-middle">
+      <thead><tr><th>Criança</th><th>Responsável</th><th>Ano</th><th>Recebida em</th><th>Situação</th><th><span class="visually-hidden">Ação</span></th></tr></thead>
+      <tbody>
+      {% for item in page_obj %}
+        <tr>
+          <td><a class="aluno-link" href="{% url 'pre_matricula_analisar' item.pk %}">{{ item.nome_crianca }}</a></td>
+          <td>{{ item.nome_responsavel }}<br><small class="text-secondary">{{ item.telefone }}</small></td>
+          <td>{{ item.link.ano_letivo.ano }}</td>
+          <td>{{ item.enviada_em|date:"d/m/Y H:i" }}</td>
+          <td>{% if item.status == "aprovada" %}<span class="sit sit-ativo">{{ item.get_status_display }}</span>{% elif item.status == "rejeitada" %}<span class="sit sit-cancelado">{{ item.get_status_display }}</span>{% elif item.status == "em_analise" %}<span class="sit sit-transferido">{{ item.get_status_display }}</span>{% else %}<span class="badge-alert">{{ item.get_status_display }}</span>{% endif %}</td>
+          <td class="text-end"><a class="btn btn-sm {% if item.status == 'aprovada' %}btn-outline-primary{% else %}btn-primary{% endif %}" href="{% url 'pre_matricula_analisar' item.pk %}">{% if item.status == "aprovada" %}Ver{% else %}Analisar{% endif %}</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}<div class="empty">Nenhuma solicitação encontrada.</div>{% endif %}
+</section>
+{% endblock %}

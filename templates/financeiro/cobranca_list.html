@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Financeiro | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <h1 class="page-title">Financeiro</h1>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'relatorio_mensal' %}"><i class="bi bi-bar-chart" aria-hidden="true"></i> Relatório mensal</a>
+      <a class="btn btn-primary" href="{% url 'cobranca_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Nova cobrança</a>
+    </div>
+  </div>
+
+  {% include "financeiro/_abas.html" with aba="cobrancas" %}
+  <form method="get" class="filters row g-2 align-items-end mb-4">
+    <div class="col-6 col-md-2">
+      <label class="form-label" for="mes">Mês de vencimento</label>
+      <input class="form-control" type="month" id="mes" name="mes" value="{{ f.mes }}" placeholder="AAAA-MM" pattern="\d{4}-\d{2}">
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label" for="q">Aluno</label>
+      <input class="form-control" id="q" name="q" value="{{ f.q }}" placeholder="Nome do aluno">
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label" for="status">Situação</label>
+      <select class="form-select" id="status" name="status">
+        <option value="">Todas</option>
+        <option value="pendente" {% if f.status == "pendente" %}selected{% endif %}>Pendentes</option>
+        <option value="vencida" {% if f.status == "vencida" %}selected{% endif %}>Vencidas</option>
+        <option value="paga" {% if f.status == "paga" %}selected{% endif %}>Pagas</option>
+        <option value="cancelada" {% if f.status == "cancelada" %}selected{% endif %}>Canceladas</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="tipo">Tipo</label>
+      <select class="form-select" id="tipo" name="tipo">
+        <option value="">Todos</option>
+        {% for v, l in tipos %}<option value="{{ v }}" {% if f.tipo == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Filtrar</button></div>
+  </form>
+
+  <div class="stats">
+    <div class="stat"><span class="stat-label">Previsto</span><span class="stat-value">R$ {{ resumo.previsto|floatformat:"2g" }}</span></div>
+    <div class="stat stat-ok"><span class="stat-label">Recebido</span><span class="stat-value">R$ {{ resumo.recebido|floatformat:"2g" }}</span></div>
+    <div class="stat"><span class="stat-label">Em aberto</span><span class="stat-value">R$ {{ resumo.aberto|floatformat:"2g" }}</span></div>
+    <div class="stat stat-bad"><span class="stat-label">Vencido</span><span class="stat-value">R$ {{ resumo.vencido|floatformat:"2g" }}</span></div>
+  </div>
+
+  {% if page_obj %}
+  <div class="table-responsive">
+    <table class="table table-ms align-middle">
+      <thead><tr><th>Aluno</th><th>Cobrança</th><th>Vencimento</th><th class="text-end">Valor</th><th>Situação</th><th><span class="visually-hidden">Ação</span></th></tr></thead>
+      <tbody>
+      {% for c in page_obj %}
+        <tr>
+          <td><a class="aluno-link" href="{% url 'cobranca_detail' c.pk %}">{{ c.matricula.aluno.nome }}</a></td>
+          <td>{{ c.descricao }}</td>
+          <td>{{ c.vencimento|date:"d/m/Y" }}</td>
+          <td class="text-end">
+            R$ {% if c.paga %}{{ c.valor_pago|floatformat:"2g" }}{% else %}{{ c.valor_liquido|floatformat:"2g" }}{% endif %}
+            {% if c.desconto and not c.paga %}<br><small class="text-secondary">desc. R$ {{ c.desconto|floatformat:"2g" }}</small>{% endif %}
+            {% if c.status == "vencida" %}<br><small class="text-danger">hoje R$ {{ c.valor_atualizado|floatformat:"2g" }}</small>{% endif %}
+          </td>
+          <td>{% include "partials/status_fin.html" %}</td>
+          <td class="text-end">
+            {% if c.aberta %}<a class="btn btn-primary btn-sm" href="{% url 'cobranca_receber' c.pk %}">Receber</a>
+            {% elif c.paga %}<a class="btn btn-outline-primary btn-sm" href="{% url 'cobranca_recibo' c.pk %}" target="_blank" rel="noopener">Recibo</a>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">Nenhuma cobrança encontrada. Gere as mensalidades a partir de uma <a href="{% url 'matricula_list' %}">matrícula</a>.</div>
+  {% endif %}
+</section>
+{% endblock %}

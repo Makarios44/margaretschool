@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% block title %}Dias letivos | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div><h1 class="page-title mb-1">Dias letivos</h1><p class="mb-0 text-secondary">Conferência do mínimo legal: {{ minimo_horas }} horas em {{ minimo_dias }} dias</p></div>
+    <div class="d-flex flex-wrap gap-2">
+      {% if sel %}<a class="btn btn-outline-primary" href="{% url 'ano_configurar' sel.pk %}"><i class="bi bi-sliders" aria-hidden="true"></i> Configurar o ano</a>{% endif %}
+      <a class="btn btn-outline-primary" href="{% url 'evento_list' %}">Eventos</a>
+    </div>
+  </div>
+
+  <form method="get" class="filters row g-2 align-items-end mb-4">
+    <div class="col-8 col-md-3"><label class="form-label" for="ano">Ano letivo</label>
+      <select class="form-select" id="ano" name="ano">{% for a in anos %}<option value="{{ a.pk }}" {% if sel and a.pk == sel.pk %}selected{% endif %}>{{ a }}</option>{% endfor %}</select></div>
+    <div class="col-4 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Ver</button></div>
+  </form>
+
+  {% if not sel %}
+    <div class="empty"><a href="{% url 'adm_ano_novo' %}">Cadastre um ano letivo</a> para começar.</div>
+  {% elif not r %}
+    <div class="empty">Informe o <strong>início e o fim das aulas</strong> de {{ sel.ano|unlocalize }} para contar os dias letivos. <a href="{% url 'ano_configurar' sel.pk %}">Configurar agora</a>.</div>
+  {% else %}
+    <div class="stats">
+      <div class="stat {% if r.atende_dias %}stat-ok{% else %}stat-bad{% endif %}"><span class="stat-label">Dias letivos</span><span class="stat-value">{{ r.total }} / {{ minimo_dias }}</span>
+        <small>{% if r.atende_dias %}Mínimo atingido{% else %}Faltam {{ r.faltam_dias }} dia{{ r.faltam_dias|pluralize }}{% endif %}</small></div>
+      <div class="stat {% if r.atende_horas %}stat-ok{% else %}stat-bad{% endif %}"><span class="stat-label">Horas de trabalho escolar</span><span class="stat-value">{{ r.horas|floatformat:0 }} h / {{ minimo_horas }} h</span>
+        <small>{{ sel.horas_dia_letivo|floatformat:"-1" }} h por dia letivo{% if not r.atende_horas %} · faltam {{ r.faltam_horas|floatformat:0 }} h{% endif %}</small></div>
+      <div class="stat"><span class="stat-label">Período das aulas</span><span class="stat-value" style="font-size:1.15rem">{{ r.inicio|date:"d/m/Y" }} a {{ r.fim|date:"d/m/Y" }}</span><small>{{ r.dias_sem_aula|length }} dia{{ r.dias_sem_aula|length|pluralize }} útil{{ r.dias_sem_aula|length|pluralize:",eis" }} sem aula · {{ r.sabados_letivos|length }} sábado{{ r.sabados_letivos|length|pluralize }} letivo{{ r.sabados_letivos|length|pluralize }}</small></div>
+    </div>
+    {% if not r.atende_dias or not r.atende_horas %}
+      <div class="care-box mb-3" role="alert">O calendário ainda não cumpre o mínimo legal. Revise férias e recessos, ou programe <strong>sábados letivos</strong> (categoria <em>Sábado letivo</em>) para repor os dias.</div>
+    {% endif %}
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="panel h-100"><h2 class="panel-title">Por mês</h2>
+          <table class="table table-ms mb-0"><thead><tr><th>Mês</th><th class="text-end">Dias letivos</th></tr></thead><tbody>
+          {% for m in r.por_mes %}<tr><td><a href="{% url 'calendario_mes' m.ano m.mes %}">{{ m.mes }}/{{ m.ano|unlocalize }}</a></td><td class="text-end">{{ m.dias }}</td></tr>{% endfor %}
+          </tbody></table></div>
+      </div>
+      <div class="col-lg-6">
+        <div class="panel h-100"><h2 class="panel-title">Por período</h2>
+          {% if r.periodos %}<table class="table table-ms mb-0"><thead><tr><th>Período</th><th>Datas</th><th class="text-end">Dias letivos</th></tr></thead><tbody>
+          {% for p in r.periodos %}<tr><td>{{ p.periodo.nome }}</td><td>{{ p.periodo.inicio|date:"d/m" }} a {{ p.periodo.fim|date:"d/m" }}</td><td class="text-end">{{ p.dias }}</td></tr>{% endfor %}
+          </tbody></table>
+          {% else %}<p class="text-secondary mb-0">Nenhum bimestre/trimestre cadastrado. <a href="{% url 'ano_configurar' sel.pk %}">Adicionar</a>.</p>{% endif %}</div>
+      </div>
+    </div>
+
+    <div class="panel mt-4">
+      <h2 class="panel-title">Dias úteis sem aula no período</h2>
+      {% if r.dias_sem_aula %}<p class="mb-0">{% for d in r.dias_sem_aula %}<span class="chip cat-ponto_facultativo me-1 mb-1">{{ d|date:"d/m" }}</span>{% endfor %}</p>
+      {% else %}<p class="text-secondary mb-0">Nenhum.</p>{% endif %}
+      <p class="form-text mt-3 mb-0">Conta como dia letivo: dia útil (seg–sex) no período das aulas, sem evento marcado “não há aula” para toda a escola, mais os sábados letivos. Eventos só de algumas turmas não entram nesta conta.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

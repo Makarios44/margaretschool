@@ -1,0 +1,24 @@
+{% for p in periodos %}
+<div class="periodo">
+  <table class="doc-tabela">
+    <thead><tr><th>Ano letivo</th><th>Etapa</th><th>Turma / turno</th><th class="num">Carga horária</th><th class="num">Dias letivos</th><th class="num">Faltas</th><th class="num">Frequência</th><th>Resultado</th></tr></thead>
+    <tbody><tr>
+      <td>{{ p.ano }}</td><td>{{ p.etapa_nome }}</td><td>{{ p.turma }} · {{ p.turno }}</td>
+      <td class="num">{% if p.carga_horaria %}{{ p.carga_horaria }} h{% else %}—{% endif %}</td>
+      <td class="num">{% if p.dias_letivos != "" %}{{ p.dias_letivos }}{% else %}—{% endif %}</td>
+      <td class="num">{% if p.faltas != "" %}{{ p.faltas }}{% else %}—{% endif %}</td>
+      <td class="num">{% if p.frequencia %}{{ p.frequencia }}%{% else %}—{% endif %}</td>
+      <td>{{ p.resultado }}</td>
+    </tr></tbody>
+  </table>
+  {% if p.componentes %}
+  <table class="doc-tabela">
+    <thead><tr><th>Componente curricular</th><th class="num">Carga horária</th><th class="num">Resultado final</th></tr></thead>
+    <tbody>{% for comp in p.componentes %}<tr><td>{{ comp.nome }}</td><td class="num">{% if comp.carga_horaria %}{{ comp.carga_horaria }} h{% else %}—{% endif %}</td><td class="num">{{ comp.resultado|default:"—" }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% endif %}
+  {% if p.parecer %}<div class="parecer"><strong>{% if p.infantil %}Parecer descritivo{% else %}Observações{% endif %}:</strong> {{ p.parecer }}</div>{% endif %}
+</div>
+{% empty %}
+<p class="doc-texto doc-sem-recuo">Nenhum registro escolar encontrado para este aluno.</p>
+{% endfor %}

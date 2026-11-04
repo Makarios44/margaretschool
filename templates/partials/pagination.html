@@ -1,0 +1,13 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Páginas" class="mt-4">
+  <ul class="pagination justify-content-center flex-wrap">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a></li>
+    {% endif %}
+    <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.next_page_number }}">Próxima</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}

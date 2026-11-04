@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Dados da escola | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:960px">
+  <div class="page-bar"><div><h1 class="page-title mb-1">Dados da escola</h1>
+    <p class="mb-0 text-secondary">Usados em declarações, histórico, recibos, contrato e no cálculo de multa e juros.</p></div>
+    <a class="btn btn-outline-primary" href="{% url 'administracao' %}">Voltar</a></div>
+  <form method="post" novalidate>{% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <fieldset class="panel"><legend>Identificação</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.nome col="col-md-8" %}
+        {% include "partials/field.html" with field=form.cnpj col="col-md-4" %}
+        {% include "partials/field.html" with field=form.mantenedora col="col-md-8" %}
+        {% include "partials/field.html" with field=form.inep col="col-md-4" %}
+        {% include "partials/field.html" with field=form.endereco col="col-md-8" %}
+        {% include "partials/field.html" with field=form.telefone col="col-md-4" %}
+        {% include "partials/field.html" with field=form.cidade col="col-md-4" %}
+      </div>
+    </fieldset>
+    <fieldset class="panel"><legend>Página inicial do site</legend>
+      <p class="form-text">Textos que as famílias veem ao abrir o site. Os anúncios (matrículas, eventos, avisos) são em <a href="{% url 'divulgacao' %}">Divulgação</a>.</p>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.slogan col="col-12" %}
+        {% include "partials/field.html" with field=form.apresentacao col="col-12" %}
+        {% include "partials/field.html" with field=form.instagram col="col-md-6" %}
+      </div>
+    </fieldset>
+    <fieldset class="panel"><legend>Documentos oficiais</legend>
+      <p class="form-text">Aparecem no cabeçalho e nas assinaturas dos documentos escolares. Sem eles, o sistema avisa antes de imprimir.</p>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.ato_autorizacao col="col-12" %}
+        {% include "partials/field.html" with field=form.diretor col="col-md-6" %}
+        {% include "partials/field.html" with field=form.diretor_ato col="col-md-6" %}
+        {% include "partials/field.html" with field=form.secretario col="col-md-6" %}
+        {% include "partials/field.html" with field=form.secretario_ato col="col-md-6" %}
+      </div>
+    </fieldset>
+    <fieldset class="panel"><legend>Multa e juros</legend>
+      <p class="form-text">Em uso agora: multa de <strong>{{ atual.multa }}%</strong> e juros de <strong>{{ atual.juros }}%</strong> ao mês. Mantenha igual ao que consta no contrato.</p>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.multa_percentual col="col-md-6" %}
+        {% include "partials/field.html" with field=form.juros_mensal_percentual col="col-md-6" %}
+      </div>
+    </fieldset>
+    <fieldset class="panel"><legend>Região do calendário</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.calendario_uf col="col-md-3" %}
+        {% include "partials/field.html" with field=form.calendario_municipio col="col-md-5" %}
+      </div>
+    </fieldset>
+    <div class="d-flex gap-2 justify-content-end"><a class="btn btn-outline-primary" href="{% url 'administracao' %}">Cancelar</a><button class="btn btn-primary" type="submit">Salvar dados</button></div>
+  </form>
+</section>
+{% endblock %}

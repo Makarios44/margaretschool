@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Gerenciar eventos | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <h1 class="page-title">Eventos do calendário</h1>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'feriados_gerar' %}"><i class="bi bi-flag" aria-hidden="true"></i> Gerar feriados</a>
+      <a class="btn btn-outline-primary" href="{% url 'dias_letivos' %}"><i class="bi bi-calculator" aria-hidden="true"></i> Dias letivos</a>
+      <a class="btn btn-primary" href="{% url 'evento_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Novo evento</a>
+    </div>
+  </div>
+  <form method="get" class="filters row g-2 align-items-end mb-4">
+    <div class="col-12 col-md-4"><label class="form-label" for="q">Título</label><input class="form-control" id="q" name="q" value="{{ f.q }}"></div>
+    <div class="col-6 col-md-4"><label class="form-label" for="categoria">Categoria</label>
+      <select class="form-select" id="categoria" name="categoria"><option value="">Todas</option>{% for v, l in categorias %}<option value="{{ v }}" {% if f.categoria == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-2"><label class="form-label" for="ano">Ano</label><input class="form-control" id="ano" name="ano" value="{{ f.ano }}" inputmode="numeric"></div>
+    <div class="col-12 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Filtrar</button></div>
+  </form>
+  {% if page_obj %}
+  <div class="table-responsive">
+    <table class="table table-ms align-middle">
+      <thead><tr><th>Data</th><th>Evento</th><th>Categoria</th><th>Visibilidade</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+      <tbody>
+      {% for ev in page_obj %}
+        <tr>
+          <td>{{ ev.data_inicio|date:"d/m/Y" }}{% if ev.varios_dias %}<br><small class="text-secondary">até {{ ev.data_fim|date:"d/m/Y" }}</small>{% endif %}</td>
+          <td><a class="aluno-link" href="{% url 'evento_detail' ev.pk %}">{{ ev.titulo }}</a>{% if ev.sem_aula %} <small class="text-secondary">· sem aula</small>{% endif %}</td>
+          <td><span class="chip cat-{{ ev.categoria }}">{{ ev.get_categoria_display }}</span></td>
+          <td>{% if ev.publico %}Pública{% else %}Interna{% endif %}{% if not ev.toda_escola %} · turmas{% endif %}</td>
+          <td class="text-end"><a class="btn btn-outline-primary btn-sm" href="{% url 'evento_update' ev.pk %}">Editar</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}<div class="empty">Nenhum evento encontrado. <a href="{% url 'feriados_gerar' %}">Gere os feriados do ano.</a></div>{% endif %}
+</section>
+{% endblock %}

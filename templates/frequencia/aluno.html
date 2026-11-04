@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Frequência de {{ aluno.nome }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4 freq">
+  <div class="page-bar no-print"><div><h1 class="page-title mb-1">{{ aluno.nome }}</h1>
+    <p class="mb-0 text-secondary">Frequência de {{ inicio|date:"d/m/Y" }} a {{ fim|date:"d/m/Y" }}</p></div>
+    <div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-primary" href="{% url 'frequencia_consulta_aluno' %}">Outro aluno</a>
+      <button class="btn btn-outline-primary" type="button" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i> Imprimir</button></div></div>
+  <p class="d-none d-print-block mb-2"><strong>{{ escola.nome|default:"Margaret School" }}</strong> · Frequência de {{ aluno.nome }} · {{ inicio|date:"d/m/Y" }} a {{ fim|date:"d/m/Y" }}</p>
+
+  <form method="get" class="panel freq-filtro no-print">
+    {% if erro %}<div class="alert alert-danger py-2">{{ erro }}</div>{% endif %}
+    <div class="row g-2 align-items-end">
+      <div class="col-6 col-md-3"><label class="form-label" for="inicio">De</label><input class="form-control" type="date" id="inicio" name="inicio" value="{{ inicio|date:'Y-m-d' }}"></div>
+      <div class="col-6 col-md-3"><label class="form-label" for="fim">Até</label><input class="form-control" type="date" id="fim" name="fim" value="{{ fim|date:'Y-m-d' }}"></div>
+      <div class="col-12 col-md-2 d-grid"><button class="btn btn-primary" type="submit">Atualizar</button></div>
+      <div class="col-12 col-md-4 d-flex flex-wrap gap-2 justify-content-md-end">
+        {% for nome, i, f in atalhos %}<a class="btn btn-outline-primary btn-sm" href="?inicio={{ i|date:'Y-m-d' }}&fim={{ f|date:'Y-m-d' }}">{{ nome }}</a>{% endfor %}
+      </div>
+    </div>
+  </form>
+
+  {% for b in blocos %}
+  <article class="panel mt-3 avoid-break">
+    <h2 class="h5 mb-1">{{ b.matricula.ano_letivo }} · {{ b.matricula.turma.nome }} <small class="text-secondary">({{ b.matricula.turma.get_turno_display }})</small></h2>
+    <div class="stats freq-stats">
+      <div class="stat"><span class="stat-label">Dias com chamada</span><span class="stat-value">{{ b.resumo.dias }}</span></div>
+      <div class="stat stat-ok"><span class="stat-label">Presenças</span><span class="stat-value">{{ b.resumo.presencas }}</span></div>
+      <div class="stat {% if b.resumo.faltas %}stat-bad{% endif %}"><span class="stat-label">Faltas</span><span class="stat-value">{{ b.resumo.faltas }}</span><small>{{ b.resumo.justificadas }} justificada{{ b.resumo.justificadas|pluralize }}</small></div>
+      <div class="stat {% if b.abaixo %}stat-bad{% else %}stat-ok{% endif %}"><span class="stat-label">Frequência</span><span class="stat-value">{{ b.resumo.percentual|floatformat:1 }}%</span></div>
+    </div>
+    {% if b.abaixo %}<div class="alert alert-warning py-2"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> Abaixo do mínimo de {{ b.minimo }}% ({{ b.base_minimo }}). É um alerta para a secretaria; a decisão é da escola.</div>{% endif %}
+    {% if b.faltas %}
+    <h3 class="h6">Faltas no período</h3>
+    <ul class="freq-faltas">
+      {% for p in b.faltas %}<li><strong>{{ p.chamada.data|date:"d/m/Y" }}</strong> <span class="text-secondary">{{ p.chamada.data|date:"D" }}</span>
+        <span class="chip {% if p.status == 'J' %}chip-j{% else %}chip-f{% endif %}">{{ p.get_status_display }}</span>
+        {% if p.justificativa %}<span>— {{ p.justificativa }}</span>{% endif %}</li>{% endfor %}
+    </ul>
+    {% else %}<p class="mb-2">Nenhuma falta no período.</p>{% endif %}
+    <a class="btn btn-outline-primary btn-sm no-print" href="{{ b.declaracao }}"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Gerar declaração de frequência com estes dados</a>
+  </article>
+  {% empty %}
+  <div class="alert alert-info mt-3">Não há chamadas registradas para este aluno no período.</div>
+  {% endfor %}
+  <p class="small text-secondary mt-3">Falta justificada também conta como falta no cálculo da frequência; a justificativa serve de registro para a escola.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Matrículas | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <h1 class="page-title">Matrículas</h1>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'rematricula_list' %}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Rematrículas</a>
+      <a class="btn btn-primary" href="{% url 'matricula_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Nova matrícula</a>
+    </div>
+  </div>
+
+  <form method="get" class="filters row g-2 align-items-end mb-4">
+    <div class="col-12 col-md-3">
+      <label class="form-label" for="q">Aluno</label>
+      <input class="form-control" id="q" name="q" value="{{ f.q }}" placeholder="Nome do aluno">
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label" for="ano">Ano letivo</label>
+      <select class="form-select" id="ano" name="ano">
+        <option value="">Todos</option>
+        {% for a in anos %}<option value="{{ a.pk }}" {% if f.ano == a.pk|stringformat:"s" %}selected{% endif %}>{{ a }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="turma">Turma</label>
+      <select class="form-select" id="turma" name="turma">
+        <option value="">Todas</option>
+        {% for t in turmas %}<option value="{{ t.pk }}" {% if f.turma == t.pk|stringformat:"s" %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label" for="turno">Turno</label>
+      <select class="form-select" id="turno" name="turno">
+        <option value="">Todos</option>
+        {% for v, l in turnos %}<option value="{{ v }}" {% if f.turno == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label" for="situacao">Situação</label>
+      <select class="form-select" id="situacao" name="situacao">
+        <option value="">Todas</option>
+        {% for v, l in situacoes %}<option value="{{ v }}" {% if f.situacao == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-12 d-grid d-md-block"><button class="btn btn-outline-primary" type="submit">Filtrar</button></div>
+  </form>
+
+  {% if page_obj %}
+  <div class="table-responsive">
+    <table class="table table-ms align-middle">
+      <thead><tr><th>Aluno</th><th>Ano</th><th>Turma</th><th>Tipo</th><th>Situação</th><th class="text-end">Mensalidade</th><th>Documentos</th></tr></thead>
+      <tbody>
+      {% for m in page_obj %}
+        <tr>
+          <td><a class="aluno-link" href="{% url 'matricula_detail' m.pk %}">{{ m.aluno.nome }}</a></td>
+          <td>{{ m.ano_letivo }}</td>
+          <td>{{ m.turma.nome }} · {{ m.get_turno_display }}</td>
+          <td>{{ m.get_tipo_display }}</td>
+          <td>{% include "partials/situacao.html" with m=m %}</td>
+          <td class="text-end">R$ {{ m.mensalidade|floatformat:"2g" }}</td>
+          <td>{% if m.pendentes %}<span class="badge-alert">{{ m.pendentes }} pendente{{ m.pendentes|pluralize }}</span>{% else %}<span class="badge-ok"><i class="bi bi-check-lg" aria-hidden="true"></i> Completo</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">Nenhuma matrícula encontrada com esses filtros.</div>
+  {% endif %}
+</section>
+{% endblock %}

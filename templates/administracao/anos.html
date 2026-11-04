@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Anos letivos | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><h1 class="page-title">Anos letivos</h1>
+    <div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-primary" href="{% url 'administracao' %}">Administração</a>
+      <a class="btn btn-primary" href="{% url 'adm_ano_novo' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Novo ano letivo</a></div></div>
+  {% if anos %}
+  <div class="table-responsive"><table class="table table-ms align-middle">
+    <thead><tr><th>Ano</th><th>Aulas</th><th class="text-end">Turmas</th><th class="text-end">Matrículas</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+    <tbody>{% for a in anos %}
+      <tr>
+        <td><strong>{{ a.ano }}</strong> {% if a.atual %}<span class="sit sit-ativo ms-1">Ano atual</span>{% endif %}</td>
+        <td>{% if a.inicio_aulas %}{{ a.inicio_aulas|date:"d/m/Y" }} a {{ a.fim_aulas|date:"d/m/Y" }}{% else %}<span class="badge-alert">Não configurado</span>{% endif %}</td>
+        <td class="text-end">{{ a.n_turmas }}</td><td class="text-end">{{ a.n_matriculas }}</td>
+        <td class="text-end">
+          <a class="btn btn-outline-primary btn-sm" href="{% url 'ano_configurar' a.pk %}">Aulas e bimestres</a>
+          <a class="btn btn-outline-primary btn-sm" href="{% url 'adm_ano_editar' a.pk %}">Editar</a>
+          {% if not a.n_turmas and not a.n_matriculas %}<form method="post" action="{% url 'adm_ano_excluir' a.pk %}" class="d-inline" onsubmit="return confirm('Excluir o ano {{ a.ano }}?');">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" type="submit">Excluir</button></form>{% endif %}
+        </td>
+      </tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty">Nenhum ano letivo. <a href="{% url 'adm_ano_novo' %}">Crie o primeiro.</a></div>{% endif %}
+  <p class="form-text mt-3">Ao virar o ano: crie o novo ano letivo (marcando “Ano atual”), copie as turmas do ano anterior, configure as aulas e gere os feriados.</p>
+</section>
+{% endblock %}

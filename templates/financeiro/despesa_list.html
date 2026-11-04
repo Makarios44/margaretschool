@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Despesas | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><h1 class="page-title">Despesas</h1>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="?{% if qs %}{{ qs }}&{% endif %}formato=csv"><i class="bi bi-filetype-csv" aria-hidden="true"></i> Exportar CSV</a>
+      <a class="btn btn-primary" href="{% url 'despesa_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Lançar despesa</a></div></div>
+  {% include "financeiro/_abas.html" with aba="despesas" %}
+  <form method="get" class="filters row g-2 align-items-end mb-4">
+    <div class="col-6 col-md-2"><label class="form-label" for="mes">Mês</label><input class="form-control" type="month" id="mes" name="mes" value="{{ f.mes }}" placeholder="AAAA-MM" pattern="\d{4}-\d{2}"></div>
+    <div class="col-12 col-md-3"><label class="form-label" for="q">Buscar</label><input class="form-control" id="q" name="q" value="{{ f.q }}" placeholder="Descrição, fornecedor ou nota"></div>
+    <div class="col-6 col-md-3"><label class="form-label" for="categoria">Categoria</label><select class="form-select" id="categoria" name="categoria"><option value="">Todas</option>{% for c in categorias %}<option value="{{ c.pk }}" {% if f.categoria == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nome }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-2"><label class="form-label" for="forma">Pagamento</label><select class="form-select" id="forma" name="forma"><option value="">Todos</option>{% for v, l in formas %}<option value="{{ v }}" {% if f.forma == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Filtrar</button></div>
+  </form>
+  <div class="stats"><div class="stat stat-bad"><span class="stat-label">Total do filtro</span><span class="stat-value">R$ {{ total|floatformat:"2g" }}</span><small>{{ quantidade }} lançamento{{ quantidade|pluralize }}</small></div></div>
+  {% if page_obj %}
+  <div class="table-responsive"><table class="table table-ms align-middle">
+    <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Fornecedor</th><th>Pagamento</th><th class="text-end">Valor</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+    <tbody>{% for d in page_obj %}<tr>
+      <td>{{ d.data|date:"d/m/Y" }}</td>
+      <td><a class="aluno-link" href="{% url 'despesa_detail' d.pk %}">{{ d.descricao }}</a>{% if d.comprovante %} <i class="bi bi-paperclip" title="Tem comprovante" aria-label="Tem comprovante"></i>{% endif %}</td>
+      <td>{{ d.categoria.nome }}</td><td>{{ d.fornecedor|default:"—" }}</td><td>{{ d.get_forma_pagamento_display }}</td>
+      <td class="text-end">R$ {{ d.valor|floatformat:"2g" }}</td>
+      <td class="text-end"><a class="btn btn-outline-primary btn-sm" href="{% url 'despesa_update' d.pk %}">Editar</a></td></tr>{% endfor %}</tbody></table></div>
+  {% include "partials/pagination.html" %}
+  {% else %}<div class="empty">Nenhuma despesa neste filtro. <a href="{% url 'despesa_create' %}">Lance uma despesa.</a></div>{% endif %}
+</section>
+{% endblock %}

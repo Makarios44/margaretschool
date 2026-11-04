@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{% if aluno %}Editar {{ aluno.nome }}{% else %}Novo aluno{% endif %} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <h1 class="page-title">{% if aluno %}Editar cadastro{% else %}Novo aluno{% endif %}</h1>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+    <fieldset class="panel">
+      <legend>Dados da criança</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.nome col="col-md-8" %}
+        {% include "partials/field.html" with field=form.data_nascimento col="col-md-4" %}
+        {% include "partials/field.html" with field=form.sexo col="col-md-4" %}
+        {% include "partials/field.html" with field=form.cpf col="col-md-4" %}
+        {% include "partials/field.html" with field=form.certidao_nascimento col="col-md-4" %}
+        {% include "partials/field.html" with field=form.naturalidade col="col-md-6" %}
+        {% include "partials/field.html" with field=form.endereco col="col-md-6" %}
+        {% include "partials/field.html" with field=form.bairro col="col-md-3" %}
+        {% include "partials/field.html" with field=form.cidade col="col-md-3" %}
+        <div class="col-md-6">
+          <label class="form-label" for="{{ form.foto.id_for_label }}">Foto <span class="text-secondary fw-normal">(opcional)</span></label>
+          {% if aluno.foto %}<div class="mb-2"><img class="avatar avatar-lg" src="{{ aluno.foto.url }}" alt="Foto atual de {{ aluno.nome }}"></div>{% endif %}
+          {{ form.foto }}
+          {% for e in form.foto.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Saúde e cuidado</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.alergias col="col-12" %}
+        {% include "partials/field.html" with field=form.observacoes_cuidado col="col-12" %}
+      </div>
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Responsáveis</legend>
+      {{ resp.management_form }}
+      {% if resp.non_form_errors %}<div class="alert alert-danger py-2">{{ resp.non_form_errors }}</div>{% endif %}
+      <div id="resp-rows">
+        {% for f in resp %}{% include "partials/formset_row.html" with form=f col="col-md-6 col-lg-3" %}{% endfor %}
+      </div>
+      <template id="resp-empty">{% include "partials/formset_row.html" with form=resp.empty_form col="col-md-6 col-lg-3" %}</template>
+      <button type="button" class="btn btn-outline-primary btn-sm mt-2" data-add-row="resp"><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar responsável</button>
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Contatos de emergência</legend>
+      {{ cont.management_form }}
+      {% if cont.non_form_errors %}<div class="alert alert-danger py-2">{{ cont.non_form_errors }}</div>{% endif %}
+      <div id="cont-rows">
+        {% for f in cont %}{% include "partials/formset_row.html" with form=f col="col-md-6 col-lg-3" %}{% endfor %}
+      </div>
+      <template id="cont-empty">{% include "partials/formset_row.html" with form=cont.empty_form col="col-md-6 col-lg-3" %}</template>
+      <button type="button" class="btn btn-outline-primary btn-sm mt-2" data-add-row="cont"><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar contato</button>
+    </fieldset>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <a class="btn btn-outline-primary" href="{% if aluno %}{% url 'aluno_detail' aluno.pk %}{% else %}{% url 'aluno_list' %}{% endif %}">Cancelar</a>
+      <button type="submit" class="btn btn-primary">Salvar cadastro</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

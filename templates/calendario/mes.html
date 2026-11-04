@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% load calendario_extras %}
+{% block title %}Calendário — {{ nome_mes }} de {{ ano|unlocalize }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title">{{ nome_mes }} de {{ ano|unlocalize }}</h1>
+      {% if letivos_mes is not None %}<p class="mb-0 text-secondary">{{ letivos_mes }} dia{{ letivos_mes|pluralize }} letivo{{ letivos_mes|pluralize }} neste mês</p>{% endif %}
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'calendario_mes' anterior.0 anterior.1 %}{% if filtros %}?{{ filtros }}{% endif %}" aria-label="Mês anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      {% if not e_hoje %}<a class="btn btn-outline-primary" href="{% url 'calendario' %}">Hoje</a>{% endif %}
+      <a class="btn btn-outline-primary" href="{% url 'calendario_mes' proximo.0 proximo.1 %}{% if filtros %}?{{ filtros }}{% endif %}" aria-label="Próximo mês"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      <a class="btn btn-outline-primary" href="{% url 'calendario_ano' ano %}"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Ano</a>
+      <a class="btn btn-outline-primary" href="{% url 'calendario_agenda' %}"><i class="bi bi-list-ul" aria-hidden="true"></i> Próximos</a>
+      {% if interno %}
+        <a class="btn btn-outline-primary" href="{% url 'evento_list' %}"><i class="bi bi-gear" aria-hidden="true"></i> Gerenciar</a>
+        <a class="btn btn-primary" href="{% url 'evento_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Novo evento</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <details class="mb-3" {% if sel.cats or sel.turma or sel.aniv %}open{% endif %}>
+    <summary class="fw-bold">Filtros e opções</summary>
+    <form method="get" class="filters row g-3 mt-1">
+      <div class="col-12">
+        <div class="d-flex flex-wrap gap-3">
+          {% for v, l in categorias %}
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="cat" value="{{ v }}" id="cat-{{ v }}" {% if v in sel.cats %}checked{% endif %}><label class="form-check-label" for="cat-{{ v }}"><span class="chip cat-{{ v }}">{{ l }}</span></label></div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="turma">Turma</label>
+        <select class="form-select" id="turma" name="turma">
+          <option value="">Todas as turmas</option>
+          {% for t in turmas %}<option value="{{ t.pk }}" {% if sel.turma == t.pk %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+      {% if interno %}
+      <div class="col-md-4 d-flex align-items-end"><div class="form-check"><input class="form-check-input" type="checkbox" name="aniv" value="1" id="aniv" {% if sel.aniv %}checked{% endif %}><label class="form-check-label" for="aniv">Mostrar aniversários dos alunos</label></div></div>
+      {% endif %}
+      <div class="col-12 d-flex gap-2"><button class="btn btn-outline-primary" type="submit">Aplicar</button><a class="btn btn-link" href="{% url 'calendario_mes' ano mes %}">Limpar</a></div>
+    </form>
+  </details>
+
+  <div class="cal-grade d-none d-md-grid" role="grid" aria-label="{{ nome_mes }} de {{ ano|unlocalize }}">
+    {% for d in dias_semana %}<div class="cal-dow" role="columnheader">{{ d }}</div>{% endfor %}
+    {% for sem in semanas %}{% for dia in sem %}
+      <div class="cal-dia{% if not dia.no_mes %} fora{% endif %}{% if dia.fds %} fds{% endif %}{% if dia.sem_aula and dia.no_mes %} sem-aula{% endif %}{% if dia.hoje %} hoje{% endif %}" role="gridcell">
+        {% if interno %}<a class="cal-num" href="{% url 'evento_create' %}?data={{ dia.data|date:'Y-m-d' }}" title="Novo evento em {{ dia.data|date:'d/m' }}">{{ dia.data.day }}</a>{% else %}<span class="cal-num">{{ dia.data.day }}</span>{% endif %}
+        {% for ev in dia.eventos %}
+          {% if ev.pk %}<a class="cal-ev cat-{{ ev.categoria }}" href="{% url 'evento_detail' ev.pk %}" title="{{ ev.titulo }}">{% if ev.hora_inicio %}<span class="cal-hora">{{ ev.hora_inicio|time:"H:i" }}</span> {% endif %}{{ ev.titulo }}</a>
+          {% else %}<span class="cal-ev cat-aniversario" title="{{ ev.titulo }}">{{ ev.titulo }}</span>{% endif %}
+        {% endfor %}
+      </div>
+    {% endfor %}{% endfor %}
+  </div>
+
+  <div class="d-md-none">
+    {% for data, eventos in agenda %}
+      <div class="agenda-dia">
+        <div class="agenda-data"><strong>{{ data.day }}</strong><span>{{ data|date:"D" }}</span></div>
+        <div class="agenda-itens">
+          {% for ev in eventos %}
+            {% if ev.pk %}<a class="agenda-item cat-{{ ev.categoria }}" href="{% url 'evento_detail' ev.pk %}">{{ ev.titulo }}{% if ev.hora_inicio %}<small>{{ ev.hora_inicio|time:"H:i" }}</small>{% endif %}</a>
+            {% else %}<span class="agenda-item cat-aniversario">{{ ev.titulo }}</span>{% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% empty %}<div class="empty">Nenhum evento neste mês.</div>{% endfor %}
+  </div>
+
+  <div class="legenda" aria-label="Legenda das cores">
+    {% for c in legenda %}<span class="chip cat-{{ c }}">{{ rotulos|get_item:c }}</span>{% endfor %}
+  </div>
+
+  <div class="panel mt-4">
+    <h2 class="panel-title">Receber no celular</h2>
+    <p class="mb-2">Assine o calendário da escola no Google Agenda, iPhone ou Outlook. Ele se atualiza sozinho.</p>
+    <div class="input-group">
+      <input class="form-control" id="ics-url" value="{{ ics_url }}" readonly aria-label="Endereço do calendário">
+      <button class="btn btn-outline-primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('ics-url').value)">Copiar</button>
+    </div>
+    <p class="form-text mb-0">No Google Agenda: <em>Outras agendas → Por URL</em>. No iPhone: <em>Ajustes → Calendário → Contas → Adicionar → Calendário assinado</em>.</p>
+  </div>
+</section>
+{% endblock %}

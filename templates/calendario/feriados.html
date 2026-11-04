@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% load calendario_extras %}
+{% block title %}Gerar feriados | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div><h1 class="page-title mb-1">Gerar feriados de {{ ano|unlocalize }}</h1>
+      <p class="mb-0 text-secondary">Região: {{ cfg.municipio }}/{{ cfg.uf }}</p></div>
+    <a class="btn btn-outline-primary" href="{% url 'evento_list' %}">Voltar aos eventos</a>
+  </div>
+
+  {% if not tem_municipais %}
+    <div class="care-box mb-3" role="note">
+      Ainda não há feriados municipais pré-cadastrados para <strong>{{ cfg.municipio }}/{{ cfg.uf }}</strong>
+      (disponíveis: {{ municipios|join:", " }}). Os nacionais e estaduais serão gerados; cadastre os municipais em
+      <a href="{% url 'evento_create' %}">Novo evento</a>, categoria <em>Feriado municipal</em>, marcando <em>Repete todo ano</em>.
+    </div>
+  {% endif %}
+
+  <form method="post" class="panel">
+    {% csrf_token %}
+    <div class="row g-3 align-items-end">
+      <div class="col-6 col-md-3">
+        <label class="form-label" for="ano">Ano</label>
+        <select class="form-select" id="ano" name="ano" onchange="location.href='?ano='+this.value">
+          {% for a in anos %}<option value="{{ a }}" {% if a == ano %}selected{% endif %}>{{ a|unlocalize }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-5">
+        <div class="form-check"><input class="form-check-input" type="checkbox" name="comemorativas" id="comem" checked><label class="form-check-label" for="comem">Incluir datas comemorativas (Páscoa, Dia das Mães, Dia dos Pais, Folclore, São João, Dia do Professor)</label></div>
+      </div>
+      <div class="col-12 col-md-4 d-grid"><button class="btn btn-primary" type="submit" {% if not novos %}disabled{% endif %}>{% if novos %}Gerar {{ novos }} evento{{ novos|pluralize }}{% else %}Tudo já gerado{% endif %}</button></div>
+    </div>
+    <p class="form-text mt-3 mb-0">Datas que dependem da Páscoa (Sexta-feira Santa, Carnaval, Corpus Christi) são calculadas para o ano. Pontos facultativos e datas comemorativas podem ser editados depois (por exemplo, para marcar que haverá aula).</p>
+  </form>
+
+  <div class="table-responsive mt-4">
+    <table class="table table-ms align-middle">
+      <thead><tr><th>Data</th><th>Evento</th><th>Tipo</th><th>Aula</th><th>Situação</th></tr></thead>
+      <tbody>
+      {% for i in previa %}
+        <tr>
+          <td>{{ i.data|date:"d/m (D)" }}</td><td>{{ i.titulo }}</td>
+          <td><span class="chip cat-{{ i.categoria }}">{{ rotulos|get_item:i.categoria }}</span></td>
+          <td>{% if i.sem_aula %}Sem aula{% else %}—{% endif %}</td>
+          <td>{% if i.existe %}<span class="badge-ok">Já cadastrado</span>{% else %}<span class="badge-alert">Novo</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

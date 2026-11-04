@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Administração | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><div><h1 class="page-title mb-1">Administração</h1><p class="mb-0 text-secondary">Cadastros de base e configurações da escola.</p></div></div>
+  <div class="row g-4">
+    <div class="col-md-6 col-lg-4"><a class="module module-blue" href="{% url 'adm_anos' %}"><i class="bi bi-calendar-range" aria-hidden="true"></i><h3>Anos letivos</h3><p>Criar o ano novo, definir o ano atual e o período das aulas.</p><span class="badge-ok">{{ n_anos }} cadastrado{{ n_anos|pluralize }}</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="module module-green" href="{% url 'adm_turmas' %}"><i class="bi bi-diagram-3" aria-hidden="true"></i><h3>Turmas</h3><p>Nome, turno, etapa de ensino e vagas. Copie as turmas do ano anterior.</p><span class="badge-ok">{{ n_turmas }} cadastrada{{ n_turmas|pluralize }}</span></a></div>
+    <div class="col-md-6 col-lg-4"><a class="module module-yellow" href="{% url 'adm_categorias' %}"><i class="bi bi-tags" aria-hidden="true"></i><h3>Categorias de despesa</h3><p>Os grupos usados para lançar e acompanhar os gastos da escola.</p></a></div>
+    <div class="col-md-6 col-lg-4"><a class="module module-blue" href="{% url 'feriados_gerar' %}"><i class="bi bi-flag" aria-hidden="true"></i><h3>Feriados do ano</h3><p>Gerar os feriados nacionais, estaduais e municipais do calendário.</p></a></div>
+    {% if user.is_superuser %}
+    <div class="col-md-6 col-lg-4"><a class="module module-green" href="{% url 'adm_escola' %}"><i class="bi bi-building" aria-hidden="true"></i><h3>Dados da escola</h3><p>CNPJ, direção, atos oficiais, multa e juros, cidade do calendário.</p></a></div>
+    <div class="col-md-6 col-lg-4"><a class="module module-yellow" href="{% url 'adm_usuarios' %}"><i class="bi bi-person-lock" aria-hidden="true"></i><h3>Usuários</h3><p>Quem pode entrar, com qual perfil, e redefinição de senhas.</p>{% if n_usuarios %}<span class="badge-ok">{{ n_usuarios }} ativo{{ n_usuarios|pluralize }}</span>{% endif %}</a></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

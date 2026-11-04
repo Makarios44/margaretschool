@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Link criado | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:800px">
+  <div class="page-bar"><h1 class="page-title">Link criado</h1></div>
+  <div class="panel">
+    <p>Envie este endereço diretamente ao responsável. Ele é individual e expira em <strong>{{ link.expira_em|date:"d/m/Y H:i" }}</strong>.</p>
+    <div class="input-group mb-3">
+      <input id="url-pre-matricula" class="form-control" value="{{ url }}" readonly aria-label="Link de pré-matrícula">
+      <button class="btn btn-outline-primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('url-pre-matricula').value)">Copiar link</button>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/?text={{ 'Olá! Este é o link para a pré-matrícula na Margaret School (vale por 14 dias): '|urlencode }}{{ url|urlencode }}"><i class="bi bi-whatsapp" aria-hidden="true"></i> Enviar pelo WhatsApp</a>
+      <a class="btn btn-outline-primary" href="{% url 'pre_matricula_links' %}">Ver links gerados</a>
+      <a class="btn btn-outline-primary" href="{% url 'pre_matricula_lista' %}">Ver solicitações</a>
+    </div>
+    <p class="form-text mt-3 mb-0">Não publique este link em redes sociais: quem tiver acesso a ele poderá enviar uma solicitação. Se enviar por engano, desative-o em <em>Links gerados</em>.</p>
+  </div>
+</section>
+{% endblock %}

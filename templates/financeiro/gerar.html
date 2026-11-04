@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Gerar mensalidades | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title mb-1">Gerar mensalidades</h1>
+      <p class="mb-0">{{ m.aluno.nome }} · {{ m.turma.nome }} · {{ ano }}</p>
+    </div>
+  </div>
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="panel h-100">
+        <h2 class="panel-title">Valores da matrícula</h2>
+        <dl class="data-list">
+          <dt>Mensalidade</dt><dd>R$ {{ m.mensalidade|floatformat:"2g" }}</dd>
+          {% if m.desconto_percentual %}<dt>Desconto</dt><dd>{{ m.desconto_percentual|floatformat:"-2" }}% (− R$ {{ m.desconto_valor|floatformat:"2g" }})</dd>{% endif %}
+          <dt>Vencimento</dt><dd>Dia {{ m.dia_vencimento }}</dd>
+        </dl>
+        <p class="form-text mb-0">Meses que já têm mensalidade são mantidos como estão. Para mudar valores, edite a <a href="{% url 'matricula_update' m.pk %}">matrícula</a> antes de gerar.</p>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <form method="post" class="panel" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="row g-3">
+          {% include "partials/field.html" with field=form.mes_inicial col="col-md-6" %}
+          {% include "partials/field.html" with field=form.quantidade col="col-md-6" %}
+          {% if form.incluir_taxa %}{% include "partials/field.html" with field=form.incluir_taxa col="col-12" %}{% endif %}
+        </div>
+        <div class="d-flex gap-2 justify-content-end mt-3">
+          <a class="btn btn-outline-primary" href="{% url 'matricula_detail' m.pk %}">Cancelar</a>
+          <button class="btn btn-primary" type="submit">Gerar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

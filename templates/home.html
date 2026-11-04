@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ escola.nome|default:"Margaret School" }}{% endblock %}
+
+{% block content %}
+{% if user.is_staff %}
+<div class="barra-equipe"><div class="container py-2 d-flex flex-wrap align-items-center">
+  <span>Você é da equipe:</span>
+  <a href="{% url 'anuncio_create' %}">+ Novo anúncio</a><a href="{% url 'divulgacao' %}">Gerenciar anúncios</a><a href="{% url 'album_create' %}">+ Novo álbum de fotos</a>
+</div></div>
+{% endif %}
+
+{% if destaques %}
+<section class="py-4" aria-label="Anúncios da escola">
+  <div class="container">
+    <div id="carrossel-anuncios" class="carousel slide carousel-fade{% if destaques|length > 1 %} com-indicadores{% endif %}"
+         data-bs-ride="carousel" data-bs-interval="8000" aria-roledescription="carrossel">
+      {% if destaques|length > 1 %}
+      <div class="carousel-indicators">
+        {% for a in destaques %}<button type="button" data-bs-target="#carrossel-anuncios" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Anúncio {{ forloop.counter }}: {{ a.titulo }}"></button>{% endfor %}
+      </div>
+      {% endif %}
+      <div class="carousel-inner">
+        {% for a in destaques %}
+        <div class="carousel-item{% if forloop.first %} active{% endif %}">
+          <article class="anuncio-slide">
+            {% if a.imagem %}<img class="anuncio-img" src="{{ a.imagem.url }}" alt="{{ a.alt }}"{% if not forloop.first %} loading="lazy"{% endif %}>{% endif %}
+            {% if a.texto or a.botao_link or not a.imagem %}
+            <div class="anuncio-corpo{% if not a.imagem %} sem-imagem{% endif %}">
+              <span class="chip-categoria">{{ a.get_categoria_display }}</span>
+              <h2>{{ a.titulo }}</h2>
+              {% if a.texto %}<p>{{ a.texto|linebreaksbr }}</p>{% endif %}
+              {% if a.botao_link %}<a class="btn {% if a.imagem %}btn-primary{% else %}btn-warning{% endif %} btn-lg" href="{{ a.botao_link }}">{{ a.botao_texto }}</a>{% endif %}
+            </div>
+            {% else %}<h2 class="visually-hidden">{{ a.titulo }}</h2>{% endif %}
+          </article>
+        </div>
+        {% endfor %}
+      </div>
+      {% if destaques|length > 1 %}
+      <button class="carousel-control-prev" type="button" data-bs-target="#carrossel-anuncios" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anúncio anterior</span></button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carrossel-anuncios" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Próximo anúncio</span></button>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="hero{% if apresentacao_compacta %} hero-compacto{% endif %}">
+  <div class="container">
+    <div class="row align-items-center {% if apresentacao_compacta %}g-3{% else %}g-5{% endif %}">
+      <div class="{% if apresentacao_compacta %}col-12{% else %}col-lg-6 order-2 order-lg-1{% endif %}">
+        <h1 class="hero-title">{{ escola.slogan|default:"Aprender é crescer junto." }}</h1>
+        {% if escola.apresentacao %}<p class="hero-lead">{{ escola.apresentacao }}</p>{% endif %}
+        <div class="d-flex flex-wrap gap-3">
+          {% if contato.whatsapp %}<a class="btn btn-primary btn-lg" href="{{ contato.whatsapp }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp" aria-hidden="true"></i> Falar com a escola</a>{% endif %}
+          <a class="btn btn-warning btn-lg" href="#titulo-contato">Informações sobre matrículas</a>
+          {% if user.is_authenticated %}<a class="btn btn-outline-primary btn-lg" href="{% url 'dashboard' %}">Abrir meu painel</a>
+          {% else %}<a class="btn btn-outline-primary btn-lg" href="{% url 'login' %}">Portal da família</a>{% endif %}
+        </div>
+      </div>
+      {% if not apresentacao_compacta %}
+      <div class="col-lg-6 order-1 order-lg-2 text-center">
+        <img class="hero-art" src="{% static 'img/escola.png' %}" alt="Professora com um notebook em frente ao prédio da escola" width="602" height="807">
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% if novidades %}
+<section class="py-5" aria-labelledby="titulo-novidades">
+  <div class="container">
+    <h2 class="secao-titulo" id="titulo-novidades">Avisos e novidades</h2>
+    <div class="row g-4">
+      {% for a in novidades %}
+      <div class="col-md-6 col-lg-4"><article class="novidade">
+        {% if a.imagem %}<img src="{{ a.imagem.url }}" alt="{{ a.alt }}" loading="lazy">{% endif %}
+        <div class="corpo"><span class="chip-categoria align-self-start">{{ a.get_categoria_display }}</span><h3>{{ a.titulo }}</h3>
+          {% if a.texto %}<p>{{ a.texto|truncatechars:160 }}</p>{% endif %}
+          {% if a.botao_link %}<a class="btn btn-outline-primary btn-sm align-self-start" href="{{ a.botao_link }}">{{ a.botao_texto }}</a>{% endif %}</div>
+      </article></div>
+      {% endfor %}
+    </div>
+    <p class="mt-3 mb-0"><a href="{% url 'avisos' %}">Ver todos os avisos</a></p>
+  </div>
+</section>
+{% endif %}
+
+{% if eventos %}
+<section class="py-5" style="background:var(--ms-blue);color:#fff" aria-labelledby="titulo-eventos">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <h2 class="secao-titulo mb-0" id="titulo-eventos" style="color:#fff">Próximos eventos</h2>
+      <a class="btn btn-warning" href="{% url 'calendario' %}">Ver o calendário</a>
+    </div>
+    <div class="row g-3">
+      {% for ev in eventos %}
+      <div class="col-md-6 col-lg-3"><a class="text-decoration-none" href="{% url 'evento_detail' ev.pk %}">
+        <div class="novidade" style="color:var(--ms-ink)"><div class="corpo"><strong style="font-size:1.4rem;color:var(--ms-blue-dark)">{{ ev.data_inicio|date:"d/m" }}</strong><h3>{{ ev.titulo }}</h3><span class="chip cat-{{ ev.categoria }} align-self-start">{{ ev.get_categoria_display }}</span></div></div></a></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if albuns %}
+<section class="py-5" aria-labelledby="titulo-fotos">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <h2 class="secao-titulo mb-0" id="titulo-fotos">Fotos das atividades</h2>
+      <a class="btn btn-outline-primary" href="{% url 'galeria' %}">Ver todas as fotos</a>
+    </div>
+    <div class="albuns-grade">
+      {% for a in albuns %}
+      <a class="album-card" href="{% url 'album_detail' a.pk %}">
+        <span class="album-capa">{% with c=a.foto_capa %}{% if c %}<img src="{% url 'foto_arquivo' c.pk 'mini' %}" alt="" loading="lazy">{% endif %}{% endwith %}</span>
+        <span class="album-info"><strong>{{ a.titulo }}</strong><small>{{ a.data_atividade|date:"d/m/Y" }} · {{ a.n_fotos }} foto{{ a.n_fotos|pluralize }}</small></span>
+      </a>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="faixa-contato py-5" aria-labelledby="titulo-contato">
+  <div class="container">
+    <h2 class="secao-titulo" id="titulo-contato">Fale com a gente</h2>
+    <ul class="contato-lista">
+      {% if escola.endereco %}<li><i class="bi bi-geo-alt-fill" aria-hidden="true"></i><span>{{ escola.endereco }}{% if escola.cidade %}<br>{{ escola.cidade }}{% endif %}{% if contato.mapa %}<br><a href="{{ contato.mapa }}" target="_blank" rel="noopener">Como chegar</a>{% endif %}</span></li>{% endif %}
+      {% if escola.telefone %}<li><i class="bi bi-telephone-fill" aria-hidden="true"></i><span>{% if contato.tel %}<a href="{{ contato.tel }}">{{ escola.telefone }}</a>{% else %}{{ escola.telefone }}{% endif %}{% if contato.whatsapp %}<br><a href="{{ contato.whatsapp }}" target="_blank" rel="noopener">Chamar no WhatsApp</a>{% endif %}</span></li>{% endif %}
+      {% if contato.instagram %}<li><i class="bi bi-instagram" aria-hidden="true"></i><span><a href="{{ contato.instagram }}" target="_blank" rel="noopener">@{{ contato.instagram_perfil }}</a></span></li>{% endif %}
+    </ul>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if destaques %}<script>
+  // Quem pediu menos movimento no sistema não recebe o carrossel girando sozinho.
+  document.addEventListener("DOMContentLoaded", () => {
+    const el = document.getElementById("carrossel-anuncios");
+    if (el && window.matchMedia("(prefers-reduced-motion: reduce)").matches && window.bootstrap) {
+      bootstrap.Carousel.getOrCreateInstance(el).pause();
+      el.setAttribute("data-bs-ride", "false");
+    }
+  });
+</script>{% endif %}
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Documentos escolares | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title">Documentos escolares</h1>
+      <p class="mb-0 text-secondary">Livro de registro dos documentos emitidos{% if aluno_filtrado %} para <strong>{{ aluno_filtrado.nome }}</strong>{% endif %}.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'folha_ponto_form' %}"><i class="bi bi-clipboard-check" aria-hidden="true"></i> Folha de ponto (professores)</a>
+      <a class="btn btn-primary" href="{% url 'documento_emitir' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Emitir documento do aluno</a>
+    </div>
+  </div>
+
+  <form method="get" class="filters row g-2 align-items-end mb-4">
+    {% if aluno_filtrado %}<input type="hidden" name="aluno" value="{{ aluno_filtrado.pk }}">{% endif %}
+    <div class="col-12 col-md-5">
+      <label class="form-label" for="q">Aluno</label>
+      <input class="form-control" id="q" name="q" value="{{ f.q }}" placeholder="Nome do aluno">
+    </div>
+    <div class="col-8 col-md-5">
+      <label class="form-label" for="tipo">Tipo</label>
+      <select class="form-select" id="tipo" name="tipo">
+        <option value="">Todos</option>
+        {% for v, l in tipos %}<option value="{{ v }}" {% if f.tipo == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-4 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Filtrar</button></div>
+  </form>
+
+  {% if page_obj %}
+  <div class="table-responsive">
+    <table class="table table-ms align-middle">
+      <thead><tr><th>Nº</th><th>Documento</th><th>Aluno</th><th>Emitido em</th><th>Por</th><th><span class="visually-hidden">Situação</span></th></tr></thead>
+      <tbody>
+      {% for d in page_obj %}
+        <tr>
+          <td><a class="aluno-link" href="{% url 'documento_ver' d.pk %}">{{ d.numero }}</a></td>
+          <td>{{ d.get_tipo_display }}</td>
+          <td>{{ d.aluno.nome }}</td>
+          <td>{{ d.emitido_em|date:"d/m/Y H:i" }}</td>
+          <td>{{ d.emitido_por.get_full_name|default:d.emitido_por.username|default:"—" }}</td>
+          <td>{% if d.anulado %}<span class="sit fin-vencida">Anulado</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">Nenhum documento emitido ainda. <a href="{% url 'documento_emitir' %}">Emita o primeiro.</a></div>
+  {% endif %}
+</section>
+{% endblock %}

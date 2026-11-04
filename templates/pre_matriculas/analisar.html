@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Analisar pré-matrícula | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title mb-1">{{ solicitacao.nome_crianca }}</h1>
+      <p class="mb-0 text-secondary">Recebida em {{ solicitacao.enviada_em|date:"d/m/Y H:i" }} · ano letivo {{ solicitacao.link.ano_letivo.ano }} · <strong>{{ solicitacao.get_status_display }}</strong></p>
+    </div>
+    <a class="btn btn-outline-primary" href="{% url 'pre_matricula_lista' %}">Voltar às solicitações</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="panel h-100">
+        <h2 class="panel-title">Dados enviados</h2>
+        <dl class="data-list">
+          <dt>Nascimento</dt><dd>{{ solicitacao.data_nascimento|date:"d/m/Y" }}</dd>
+          <dt>Sexo</dt><dd>{{ solicitacao.get_sexo_display|default:"—" }}</dd>
+          <dt>Naturalidade</dt><dd>{{ solicitacao.naturalidade|default:"—" }}</dd>
+          <dt>Certidão</dt><dd>{{ solicitacao.certidao_nascimento|default:"—" }}</dd>
+          <dt>Endereço</dt><dd>{{ solicitacao.endereco|default:"—" }}{% if solicitacao.bairro %}, {{ solicitacao.bairro }}{% endif %}{% if solicitacao.cidade %} — {{ solicitacao.cidade }}{% endif %}</dd>
+          <dt>Alergias</dt><dd>{{ solicitacao.alergias|default:"Não informado"|linebreaksbr }}</dd>
+          <dt>Cuidados</dt><dd>{{ solicitacao.observacoes_cuidado|default:"—"|linebreaksbr }}</dd>
+          <dt>Responsável</dt><dd>{{ solicitacao.nome_responsavel }} ({{ solicitacao.get_parentesco_display }})</dd>
+          <dt>CPF</dt><dd>{{ solicitacao.cpf_responsavel|default:"—" }}</dd>
+          <dt>Telefone</dt><dd>{{ solicitacao.telefone }}</dd>
+          <dt>E-mail</dt><dd>{{ solicitacao.email|default:"—" }}</dd>
+          <dt>Papel</dt><dd>{% if solicitacao.responsavel_legal %}Legal{% endif %}{% if solicitacao.responsavel_legal and solicitacao.responsavel_financeiro %} · {% endif %}{% if solicitacao.responsavel_financeiro %}Financeiro{% endif %}</dd>
+          <dt>Emergência</dt><dd>{% if solicitacao.contato_emergencia_nome %}{{ solicitacao.contato_emergencia_nome }} ({{ solicitacao.contato_emergencia_parentesco }}) · {{ solicitacao.contato_emergencia_telefone }}{% if solicitacao.contato_pode_buscar %} · pode buscar a criança{% endif %}{% else %}Não informado{% endif %}</dd>
+          <dt>Turma desejada</dt><dd>{{ solicitacao.turma_desejada|default:"Não informada" }}</dd>
+          <dt>Observações</dt><dd>{{ solicitacao.observacoes_familia|default:"—"|linebreaksbr }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      {% if somente_leitura %}
+        <div class="panel">
+          <h2 class="panel-title">Pré-matrícula aprovada</h2>
+          <p>O cadastro e a matrícula já foram criados.</p>
+          <div class="d-flex flex-wrap gap-2">
+            {% if solicitacao.aluno_criado %}<a class="btn btn-outline-primary" href="{% url 'aluno_detail' solicitacao.aluno_criado.pk %}">Ver aluno</a>{% endif %}
+            {% if solicitacao.matricula_criada %}<a class="btn btn-primary" href="{% url 'matricula_detail' solicitacao.matricula_criada.pk %}">Ver matrícula</a>{% endif %}
+          </div>
+          {% if solicitacao.observacoes_secretaria %}<p class="mt-3 mb-0"><strong>Observações da secretaria:</strong> {{ solicitacao.observacoes_secretaria|linebreaksbr }}</p>{% endif %}
+        </div>
+      {% else %}
+        {% if existente %}
+          <div class="care-box mb-3" role="alert">
+            <strong>Atenção:</strong> já existe um aluno com este nome e data de nascimento:
+            <a href="{% url 'aluno_detail' existente.pk %}" target="_blank" rel="noopener">{{ existente.nome }}</a>.
+            Se for a mesma criança, marque <em>Usar o cadastro existente</em> abaixo (cria só a matrícula). Se não, rejeite a solicitação.
+          </div>
+        {% endif %}
+        <div class="panel">
+          <h2 class="panel-title">Aprovar e efetivar matrícula</h2>
+          <p class="form-text">Ao aprovar, o sistema cria o aluno, o responsável, o contato de emergência, a matrícula e, se a taxa for maior que zero, a cobrança em aberto. As mensalidades são geradas depois, na matrícula.</p>
+          <form method="post" novalidate>{% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="row g-3">
+              {% include "partials/field.html" with field=form.turma col="col-12" %}
+              {% include "partials/field.html" with field=form.tipo col="col-md-6" %}
+              {% include "partials/field.html" with field=form.dia_vencimento col="col-md-6" %}
+              {% include "partials/field.html" with field=form.mensalidade col="col-md-6" %}
+              {% include "partials/field.html" with field=form.taxa_matricula col="col-md-6" %}
+              {% if existente %}{% include "partials/field.html" with field=form.usar_aluno_existente col="col-12" %}{% endif %}
+              <div class="col-12"><label class="form-label" for="observacoes_secretaria">Observações da secretaria</label><textarea class="form-control" name="observacoes_secretaria" id="observacoes_secretaria" rows="2">{{ solicitacao.observacoes_secretaria }}</textarea></div>
+            </div>
+            <button class="btn btn-primary mt-3" type="submit">Aprovar e criar matrícula</button>
+          </form>
+          <hr>
+          <div class="d-flex flex-wrap gap-2 align-items-start">
+            {% if solicitacao.status == "recebida" %}
+            <form method="post">{% csrf_token %}<input type="hidden" name="acao" value="em_analise"><button class="btn btn-outline-primary" type="submit">Marcar como em análise</button></form>
+            {% endif %}
+          </div>
+          <form method="post" class="mt-3" onsubmit="return confirm('Deseja realmente rejeitar esta solicitação?');">{% csrf_token %}
+            <input type="hidden" name="acao" value="rejeitar">
+            <label class="form-label" for="obs-rejeicao">Motivo / observação (rejeição)</label>
+            <textarea class="form-control mb-2" name="observacoes_secretaria" id="obs-rejeicao" rows="2"></textarea>
+            <button class="btn btn-outline-danger" type="submit">Rejeitar solicitação</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

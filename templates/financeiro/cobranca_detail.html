@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ c.descricao }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title mb-1">{{ c.descricao }}</h1>
+      <p class="mb-0">{{ c.matricula.aluno.nome }} · {{ c.matricula.turma.nome }} · {{ c.matricula.ano_letivo }} &nbsp;{% include "partials/status_fin.html" %}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      {% if c.aberta %}
+        <a class="btn btn-primary" href="{% url 'cobranca_receber' c.pk %}"><i class="bi bi-cash-coin" aria-hidden="true"></i> Receber</a>
+        <a class="btn btn-outline-primary" href="{% url 'cobranca_update' c.pk %}"><i class="bi bi-pencil" aria-hidden="true"></i> Editar</a>
+      {% elif c.paga %}
+        <a class="btn btn-primary" href="{% url 'cobranca_recibo' c.pk %}" target="_blank" rel="noopener"><i class="bi bi-printer" aria-hidden="true"></i> Recibo</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="panel h-100">
+        <h2 class="panel-title">Valores</h2>
+        <dl class="data-list">
+          <dt>Vencimento</dt><dd>{{ c.vencimento|date:"d/m/Y" }}</dd>
+          <dt>Valor</dt><dd>R$ {{ c.valor|floatformat:"2g" }}</dd>
+          <dt>Desconto</dt><dd>{% if c.desconto %}− R$ {{ c.desconto|floatformat:"2g" }}{% if c.motivo_desconto %} ({{ c.motivo_desconto }}){% endif %}{% else %}—{% endif %}</dd>
+          {% if c.paga %}
+            <dt>Multa</dt><dd>R$ {{ c.multa|floatformat:"2g" }}</dd>
+            <dt>Juros</dt><dd>R$ {{ c.juros|floatformat:"2g" }}</dd>
+            <dt>Total pago</dt><dd><strong>R$ {{ c.valor_pago|floatformat:"2g" }}</strong></dd>
+          {% else %}
+            <dt>A cobrar</dt><dd><strong>R$ {{ c.valor_liquido|floatformat:"2g" }}</strong></dd>
+          {% endif %}
+        </dl>
+        {% if multa_hoje is not None %}
+          <div class="care-box" role="note">
+            Em atraso há {{ c.dias_atraso }} dia{{ c.dias_atraso|pluralize }}. Pago hoje: multa R$ {{ multa_hoje|floatformat:"2g" }} + juros R$ {{ juros_hoje|floatformat:"2g" }}
+            = <strong>R$ {{ c.valor_atualizado|floatformat:"2g" }}</strong>.
+          </div>
+        {% endif %}
+        {% if c.observacoes %}<p class="mt-3 mb-0"><strong>Observações:</strong> {{ c.observacoes|linebreaksbr }}</p>{% endif %}
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="panel h-100">
+        <h2 class="panel-title">Pagamento</h2>
+        {% if c.paga %}
+          <dl class="data-list">
+            <dt>Data</dt><dd>{{ c.data_pagamento|date:"d/m/Y" }}</dd>
+            <dt>Forma</dt><dd>{{ c.get_forma_pagamento_display }}</dd>
+            <dt>Recibo nº</dt><dd>{{ c.recibo_numero }}</dd>
+          </dl>
+          <form method="post" action="{% url 'cobranca_estornar' c.pk %}" onsubmit="return confirm('Estornar este pagamento? A cobrança voltará para em aberto.');">
+            {% csrf_token %}
+            <button class="btn btn-outline-danger btn-sm" type="submit">Estornar pagamento</button>
+          </form>
+        {% elif c.aberta %}
+          <p>Ainda não foi paga.</p>
+          <form method="post" action="{% url 'cobranca_cancelar' c.pk %}" onsubmit="return confirm('Cancelar esta cobrança?');">
+            {% csrf_token %}
+            <button class="btn btn-outline-danger btn-sm" type="submit">Cancelar cobrança</button>
+          </form>
+        {% else %}
+          <p class="mb-0">Esta cobrança foi cancelada.</p>
+        {% endif %}
+        <p class="mt-4 mb-0"><a href="{% url 'matricula_detail' c.matricula.pk %}">Ver matrícula</a> · <a href="{% url 'aluno_detail' c.matricula.aluno.pk %}">Ver aluno</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

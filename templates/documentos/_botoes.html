@@ -1,0 +1,7 @@
+<div class="d-flex flex-wrap gap-2">
+  <a class="btn btn-primary btn-sm" href="{% url 'documento_form' 'declaracao-matricula' a.pk %}">Declaração de matrícula</a>
+  <a class="btn btn-primary btn-sm" href="{% url 'documento_form' 'declaracao-frequencia' a.pk %}">Declaração de frequência</a>
+  <a class="btn btn-primary btn-sm" href="{% url 'documento_form' 'historico' a.pk %}">Histórico / registros</a>
+  <a class="btn btn-primary btn-sm" href="{% url 'documento_form' 'transferencia' a.pk %}">Transferência</a>
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'ficha_individual' a.pk %}" target="_blank" rel="noopener">Ficha individual</a>
+</div>

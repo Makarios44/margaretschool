@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Pré-matrícula online | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:900px">
+  <div class="text-center mb-4">
+    <img src="{% static 'img/logo-doc.png' %}" alt="Margaret School" width="120" height="112" style="object-fit:contain">
+    <h1 class="page-title mt-2">Pré-matrícula online</h1>
+    <p class="mb-0">Ano letivo {{ link.ano_letivo.ano }} · preencha os dados para a análise da secretaria.</p>
+  </div>
+  <form method="post" novalidate>{% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    {% if form.errors %}<div class="alert alert-danger" role="alert">Revise os campos destacados e envie de novo.</div>{% endif %}
+
+    <fieldset class="panel">
+      <legend>Dados da criança</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.nome_crianca col="col-md-8" %}
+        {% include "partials/field.html" with field=form.data_nascimento col="col-md-4" %}
+        {% include "partials/field.html" with field=form.sexo col="col-md-4" %}
+        {% include "partials/field.html" with field=form.naturalidade col="col-md-4" %}
+        {% include "partials/field.html" with field=form.certidao_nascimento col="col-md-4" %}
+        {% include "partials/field.html" with field=form.endereco col="col-md-6" %}
+        {% include "partials/field.html" with field=form.bairro col="col-md-3" %}
+        {% include "partials/field.html" with field=form.cidade col="col-md-3" %}
+        {% include "partials/field.html" with field=form.alergias col="col-12" %}
+        {% include "partials/field.html" with field=form.observacoes_cuidado col="col-12" %}
+      </div>
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Responsável</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.nome_responsavel col="col-md-8" %}
+        {% include "partials/field.html" with field=form.parentesco col="col-md-4" %}
+        {% include "partials/field.html" with field=form.cpf_responsavel col="col-md-4" %}
+        {% include "partials/field.html" with field=form.telefone col="col-md-4" %}
+        {% include "partials/field.html" with field=form.email col="col-md-4" %}
+        {% include "partials/field.html" with field=form.profissao col="col-md-6" %}
+        {% include "partials/field.html" with field=form.responsavel_legal col="col-md-3" %}
+        {% include "partials/field.html" with field=form.responsavel_financeiro col="col-md-3" %}
+      </div>
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Contato de emergência</legend>
+      <p class="form-text">Outra pessoa que a escola possa chamar se não conseguir falar com o responsável.</p>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.contato_emergencia_nome col="col-md-6" %}
+        {% include "partials/field.html" with field=form.contato_emergencia_parentesco col="col-md-3" %}
+        {% include "partials/field.html" with field=form.contato_emergencia_telefone col="col-md-3" %}
+        {% include "partials/field.html" with field=form.contato_pode_buscar col="col-12" %}
+      </div>
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Preferências e confirmação</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.turma_desejada col="col-md-6" %}
+        {% include "partials/field.html" with field=form.observacoes_familia col="col-12" %}
+        {% include "partials/field.html" with field=form.confirmar_dados col="col-12" %}
+      </div>
+      <div class="care-box mt-3" role="note">Os dados serão usados pela escola apenas para analisar esta solicitação. Informe só o necessário. A matrícula só é efetivada depois da análise e da aprovação da secretaria.</div>
+    </fieldset>
+
+    <div class="d-grid d-md-flex justify-content-md-end"><button type="submit" class="btn btn-primary btn-lg">Enviar pré-matrícula</button></div>
+  </form>
+</section>
+{% endblock %}

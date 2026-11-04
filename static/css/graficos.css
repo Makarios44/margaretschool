@@ -1,0 +1,33 @@
+/* Gráficos do painel financeiro: HTML e CSS puros (funcionam sem internet e saem na impressão). */
+.grafico { border: 3px solid #06305F; border-radius: 20px; background: #fff; padding: 1.1rem 1.2rem; }
+.grafico h2 { font-size: 1.2rem; margin: 0 0 .15rem; color: #0063CC; }
+.grafico .sub { color: #3C5877; font-size: .9rem; margin-bottom: .8rem; }
+.legenda-g { display: flex; flex-wrap: wrap; gap: .4rem 1rem; font-size: .88rem; margin-bottom: .6rem; }
+.legenda-g i { display: inline-block; width: .9rem; height: .9rem; border-radius: 4px; margin-right: .3rem; vertical-align: -2px; }
+.cor-rec { background: #01C058; } .cor-gas { background: #E26A6A; }
+
+.gb { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: .35rem; align-items: end; height: 230px; border-bottom: 2px solid #06305F; padding-bottom: 0; position: relative; }
+.gb-grupo { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; text-align: center; }
+.gb-barras { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 2px; }
+.gb-barra { display: block; width: 42%; max-width: 22px; border-radius: 5px 5px 0 0; min-height: 0; }
+.gb-barra.rec { background: #01C058; } .gb-barra.gas { background: #E26A6A; }
+.gb-rotulos { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: .35rem; margin-top: .3rem; font-size: .78rem; text-align: center; }
+.gb-rotulos span.sel { font-weight: 700; background: #FFE81E; border-radius: 6px; }
+.gb-grupo.sel .gb-barras { background: #FFF9C9; border-radius: 6px 6px 0 0; }
+
+.pizza-area { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; }
+.pizza { width: 190px; height: 190px; border-radius: 50%; flex: none; position: relative; border: 3px solid #06305F; }
+.pizza::after { content: ""; position: absolute; inset: 27%; background: #fff; border-radius: 50%; border: 3px solid #06305F; }
+.pizza-vazia { background: #EEF3FA; }
+.cat-lista { flex: 1 1 240px; display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+.cat-lista li { display: grid; grid-template-columns: auto 1fr auto; gap: .5rem; align-items: center; font-size: .92rem; }
+.cat-lista i { width: .9rem; height: .9rem; border-radius: 4px; display: inline-block; }
+.cat-lista small { color: #3C5877; }
+
+.rank { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+.rank li { display: grid; gap: .15rem; font-size: .92rem; }
+.rank .linha { display: flex; justify-content: space-between; gap: .5rem; }
+.rank .trilho { height: 10px; border-radius: 999px; background: #E3EAF4; overflow: hidden; }
+.rank .trilho span { display: block; height: 100%; border-radius: 999px; }
+
+.neg { color: #B02A2A; } .pos { color: #087F3B; }

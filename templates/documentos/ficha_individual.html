@@ -1,0 +1,67 @@
+{% extends "documentos/base_doc.html" %}
+{% block titulo_pagina %}Ficha individual — {{ aluno.nome }}{% endblock %}
+{% block pdf_url %}{% url 'ficha_individual_pdf' aluno.pk %}{% endblock %}
+{% block voltar %}<a class="btn" href="{% url 'aluno_detail' aluno.pk %}">Voltar</a>{% endblock %}
+{% block corpo %}
+<h1 class="doc-titulo">Ficha individual do aluno</h1>
+
+<div class="topo-ficha">
+  <div>
+    <h2 style="margin-top:0">Dados da criança</h2>
+    <table class="doc-tabela">
+      <tr><th>Nome</th><td colspan="3">{{ aluno.nome }}</td></tr>
+      <tr><th>Nascimento</th><td>{{ aluno.data_nascimento|date:"d/m/Y" }} ({{ aluno.idade }})</td><th>Sexo</th><td>{{ aluno.get_sexo_display|default:"—" }}</td></tr>
+      <tr><th>Naturalidade</th><td>{{ aluno.naturalidade|default:"—" }}</td><th>CPF</th><td>{{ aluno.cpf|default:"—" }}</td></tr>
+      <tr><th>Certidão</th><td colspan="3">{{ aluno.certidao_nascimento|default:"—" }}</td></tr>
+      <tr><th>Endereço</th><td colspan="3">{{ aluno.endereco|default:"—" }}{% if aluno.bairro %}, {{ aluno.bairro }}{% endif %}{% if aluno.cidade %} — {{ aluno.cidade }}{% endif %}</td></tr>
+    </table>
+  </div>
+  <div class="foto-3x4">{% if foto_src %}<img src="{{ foto_src }}" alt="Foto de {{ aluno.nome }}">{% else %}Foto 3x4{% endif %}</div>
+</div>
+
+<h2>Saúde e cuidado</h2>
+{% if aluno.alergias %}<div class="destaque-saude"><strong>Alergias:</strong> {{ aluno.alergias|linebreaksbr }}</div>{% endif %}
+<table class="doc-tabela">
+  {% if not aluno.alergias %}<tr><th>Alergias</th><td>Nenhuma informada</td></tr>{% endif %}
+  <tr><th>Observações</th><td>{{ aluno.observacoes_cuidado|default:"Nenhuma"|linebreaksbr }}</td></tr>
+</table>
+
+<h2>Responsáveis</h2>
+<table class="doc-tabela">
+  <thead><tr><th>Nome</th><th>Parentesco</th><th>CPF</th><th>Telefone</th><th>Papel</th></tr></thead>
+  {% for r in responsaveis %}
+  <tr><td>{{ r.nome }}</td><td>{{ r.get_parentesco_display }}</td><td>{{ r.cpf|default:"—" }}</td><td>{{ r.telefone }}</td>
+  <td>{% if r.responsavel_legal %}Legal{% endif %}{% if r.responsavel_legal and r.responsavel_financeiro %}, {% endif %}{% if r.responsavel_financeiro %}Financeiro{% endif %}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Contatos de emergência</h2>
+<table class="doc-tabela">
+  <thead><tr><th>Nome</th><th>Relação</th><th>Telefone</th><th>Pode buscar</th></tr></thead>
+  {% for c in contatos %}
+  <tr><td>{{ c.nome }}</td><td>{{ c.parentesco }}</td><td>{{ c.telefone }}</td><td>{% if c.autorizado_buscar %}Sim{% else %}Não{% endif %}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Vida escolar</h2>
+<table class="doc-tabela">
+  <thead><tr><th>Ano</th><th>Etapa</th><th>Turma / turno</th><th>Matrícula em</th><th>Situação</th></tr></thead>
+  {% for m in matriculas %}
+  <tr><td>{{ m.ano_letivo }}</td><td>{{ m.turma.get_etapa_display }}</td><td>{{ m.turma.nome }} · {{ m.get_turno_display }}</td><td>{{ m.data_matricula|date:"d/m/Y" }}</td><td>{{ m.get_situacao_display }}</td></tr>
+  {% empty %}<tr><td colspan="5">Sem matrícula.</td></tr>{% endfor %}
+</table>
+
+{% if atual %}
+<h2>Documentos entregues ({{ atual.ano_letivo }})</h2>
+<table class="doc-tabela">
+  {% for d in atual.documentos.all %}
+  <tr><td>{{ d.get_tipo_display }}</td><td style="width:35%">{% if d.entregue %}☑ Entregue{% if d.data_entrega %} em {{ d.data_entrega|date:"d/m/Y" }}{% endif %}{% else %}☐ Pendente{% endif %}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+<div class="doc-rodape">
+  <span>Ficha impressa em {{ agora|date:"d/m/Y H:i" }}. Contém dados pessoais de criança: guarde com sigilo (LGPD).</span>
+  <span>{{ esc.nome }}</span>
+</div>
+{% endblock %}

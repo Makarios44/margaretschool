@@ -1,0 +1,9 @@
+<header class="doc-head">
+  <img class="doc-logo" src="{{ logo_src }}" alt="">
+  <div>
+    <div class="doc-escola">{{ esc.nome }}</div>
+    <div class="doc-linha">{% if esc.mantenedora %}Mantenedora: {{ esc.mantenedora }}{% endif %}{% if esc.cnpj %}{% if esc.mantenedora %} · {% endif %}CNPJ {{ esc.cnpj }}{% endif %}{% if esc.inep %} · Código INEP {{ esc.inep }}{% endif %}</div>
+    <div class="doc-linha">{{ esc.endereco }}{% if esc.telefone %} · {{ esc.telefone }}{% endif %}</div>
+    {% if esc.ato_autorizacao %}<div class="doc-linha">{{ esc.ato_autorizacao }}</div>{% endif %}
+  </div>
+</header>

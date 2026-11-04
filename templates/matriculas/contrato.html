@@ -1,0 +1,45 @@
+{% extends "matriculas/base_print.html" %}
+{% load financeiro_extras %}
+{% block title %}Contrato — {{ m.aluno.nome }}{% endblock %}
+{% block toolbar_note %}<span class="print-note">Modelo de contrato: peça a revisão de um advogado antes de usar. Os dados em branco da escola são preenchidos em <code>ESCOLA</code> (settings).</span>{% endblock %}
+{% block sheet %}
+{% with c=m.aluno.contratante %}
+<h1 class="print-title">Contrato de prestação de serviços educacionais — {{ m.ano_letivo }}</h1>
+
+<p><strong>CONTRATADA:</strong> {{ escola.nome }}{% if escola.cnpj %}, inscrita no CNPJ sob o nº {{ escola.cnpj }}{% endif %}{% if escola.endereco %}, com sede em {{ escola.endereco }}{% endif %}.</p>
+<p><strong>CONTRATANTE:</strong> {% if c %}{{ c.nome }}, {{ c.get_parentesco_display|lower }} do(a) aluno(a){% if c.cpf %}, CPF nº {{ c.cpf }}{% endif %}, telefone {{ c.telefone }}{% else %}______________________________________{% endif %}.</p>
+<p><strong>ALUNO(A):</strong> {{ m.aluno.nome }}, nascido(a) em {{ m.aluno.data_nascimento|date:"d/m/Y" }}, matriculado(a) na turma {{ m.turma.nome }}, turno {{ m.get_turno_display|lower }}.</p>
+
+<h2>Cláusula 1ª — Do objeto</h2>
+<p>O presente contrato tem por objeto a prestação de serviços educacionais pela CONTRATADA ao(à) aluno(a) acima identificado(a), durante o ano letivo de {{ m.ano_letivo }}, conforme o calendário e a proposta pedagógica da escola.</p>
+
+<h2>Cláusula 2ª — Da matrícula e das mensalidades</h2>
+<p>2.1. A taxa de matrícula é de <strong>R$ {{ m.taxa_matricula|floatformat:"2g" }}</strong>{% if m.taxa_paga %}, já quitada na data da matrícula{% endif %}.</p>
+<p>2.2. A mensalidade é de <strong>R$ {{ m.mensalidade|floatformat:"2g" }}</strong>, com vencimento todo dia <strong>{{ m.dia_vencimento }}</strong> de cada mês.</p>
+{% if m.desconto_percentual %}<p>2.2.1. Foi concedido desconto de {{ m.desconto_percentual|floatformat:"-2" }}%{% if m.desconto_motivo %} ({{ m.desconto_motivo }}){% endif %}, resultando em mensalidade de <strong>R$ {{ m.mensalidade_liquida|floatformat:"2g" }}</strong>.</p>{% endif %}
+<p>2.3. {% if financeiro_cfg.multa_percentual or financeiro_cfg.juros_mensal_percentual %}Em caso de atraso no pagamento, incidirão multa de {{ financeiro_cfg.multa_percentual }}% e juros de mora de {{ financeiro_cfg.juros_mensal_percentual }}% ao mês, calculados proporcionalmente aos dias de atraso, sobre o valor devido.{% else %}O atraso no pagamento poderá gerar os encargos previstos no regimento da escola e na legislação vigente.{% endif %}</p>
+
+<h2>Cláusula 3ª — Das obrigações da CONTRATADA</h2>
+<p>Prestar os serviços educacionais com zelo e qualidade; cuidar da segurança e do bem-estar do(a) aluno(a) durante sua permanência na escola; comunicar à família, com a devida antecedência, informações importantes sobre a rotina escolar e sobre a saúde da criança.</p>
+
+<h2>Cláusula 4ª — Das obrigações do CONTRATANTE</h2>
+<p>Pagar pontualmente as mensalidades; manter atualizados os dados de contato e de emergência; informar à escola alergias, medicações e outras condições de saúde do(a) aluno(a); entregar a documentação exigida; respeitar o regimento e as orientações da escola.</p>
+
+<h2>Cláusula 5ª — Da rescisão</h2>
+<p>O contrato poderá ser rescindido por qualquer das partes mediante comunicação por escrito, respeitadas as obrigações financeiras vencidas até a data da rescisão.</p>
+
+<h2>Cláusula 6ª — Do foro</h2>
+<p>Fica eleito o foro da comarca de {{ escola.cidade|default:"______________________" }} para dirimir quaisquer questões decorrentes deste contrato.</p>
+
+<p class="mt-4">{{ escola.cidade|default:"______________________" }}, {{ hoje|data_extenso }}.</p>
+
+<div class="row sign-row avoid-break">
+  <div class="col-6"><div class="sign-line">CONTRATANTE{% if c %}<br>{{ c.nome }}{% endif %}</div></div>
+  <div class="col-6"><div class="sign-line">CONTRATADA<br>{{ escola.nome }}</div></div>
+</div>
+<div class="row sign-row avoid-break">
+  <div class="col-6"><div class="sign-line">Testemunha 1</div></div>
+  <div class="col-6"><div class="sign-line">Testemunha 2</div></div>
+</div>
+{% endwith %}
+{% endblock %}

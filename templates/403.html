@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Acesso restrito | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-5">
+  <h1 class="page-title">Acesso restrito</h1>
+  <p class="lead">Esta área é exclusiva da secretaria e da direção. Se você precisa de acesso, fale com a escola.</p>
+  <a class="btn btn-primary" href="{% url 'dashboard' %}">Voltar ao painel</a>
+</section>
+{% endblock %}

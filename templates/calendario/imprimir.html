@@ -1,0 +1,32 @@
+{% extends "documentos/base_doc.html" %}
+{% load l10n %}
+{% load calendario_extras %}
+{% block titulo_pagina %}Calendário escolar {{ ano|unlocalize }}{% endblock %}
+{% block css_extra %}{% load static %}<link rel="stylesheet" href="{% static 'css/calendario.css' %}">{% endblock %}
+{% block pdf_url %}{% url 'calendario_pdf' ano %}{% endblock %}
+{% block voltar %}<a class="btn" href="{% url 'calendario_ano' ano %}">Voltar</a>{% endblock %}
+{% block corpo %}
+<h1 class="doc-titulo">Calendário escolar {{ ano|unlocalize }}</h1>
+{% if resumo %}<p class="doc-texto doc-sem-recuo">Início das aulas: <strong>{{ resumo.inicio|date:"d/m/Y" }}</strong> · Fim das aulas: <strong>{{ resumo.fim|date:"d/m/Y" }}</strong> · Dias letivos: <strong>{{ resumo.total }}</strong></p>{% endif %}
+
+<div class="mini-meses">
+  {% for m in meses %}
+  <div class="mini-mes">
+    <h3>{{ m.nome }}</h3>
+    <table>
+      <thead><tr>{% for d in dias_semana %}<th>{{ d }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for sem in m.semanas %}<tr>{% for dia in sem %}{% if dia %}<td class="{% if dia.fds %}fds{% endif %} {% if dia.cat %}cat-{{ dia.cat }}{% endif %}">{{ dia.n }}</td>{% else %}<td></td>{% endif %}{% endfor %}</tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="legenda" style="margin:4mm 0">{% for c in legenda %}<span class="chip cat-{{ c }}">{{ rotulos|get_item:c }}</span>{% endfor %}</div>
+
+<h2>Datas principais</h2>
+{% for nome, evs in relacao %}
+  <p class="doc-texto doc-sem-recuo" style="margin-bottom:1.5mm"><strong>{{ nome }}:</strong>
+  {% for ev in evs %}{{ ev.data_inicio|date:"d" }}{% if ev.varios_dias %}–{{ ev.data_fim|date:"d" }}{% endif %} {{ ev.titulo }}{% if ev.sem_aula %} (sem aula){% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}.</p>
+{% endfor %}
+<div class="doc-rodape"><span>Calendário sujeito a alterações. Consulte a escola.</span><span>{{ esc.nome }}</span></div>
+{% endblock %}

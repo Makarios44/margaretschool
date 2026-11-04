@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Fotos das atividades | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><div><h1 class="page-title mb-1">Fotos das atividades</h1><p class="mb-0 text-secondary">Momentos do dia a dia da Margaret School.</p></div>
+    {% if user.is_staff %}<a class="btn btn-primary" href="{% url 'album_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Novo álbum</a>{% endif %}</div>
+  {% if page_obj %}
+  <div class="albuns-grade">
+    {% for a in page_obj %}
+    <a class="album-card" href="{% url 'album_detail' a.pk %}">
+      <span class="album-capa">{% with c=a.foto_capa %}{% if c %}<img src="{% url 'foto_arquivo' c.pk 'mini' %}" alt="" loading="lazy">{% else %}<i class="bi bi-image" aria-hidden="true"></i>{% endif %}{% endwith %}</span>
+      <span class="album-info"><strong>{{ a.titulo }}</strong><small>{{ a.data_atividade|date:"d/m/Y" }} · {{ a.n_fotos }} foto{{ a.n_fotos|pluralize }}{% if a.visibilidade == "logados" %} · só com login{% elif a.visibilidade == "rascunho" %} · rascunho{% endif %}</small></span>
+    </a>{% endfor %}
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}<div class="empty">Ainda não há álbuns de fotos.</div>{% endif %}
+  {% if not user.is_authenticated %}<p class="form-text mt-4">Alguns álbuns são exclusivos das famílias. <a href="{% url 'login' %}">Entre</a> para ver todos.</p>{% endif %}
+</section>
+{% endblock %}

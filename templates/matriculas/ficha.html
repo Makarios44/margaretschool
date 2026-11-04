@@ -1,0 +1,62 @@
+{% extends "matriculas/base_print.html" %}
+{% block title %}Ficha de matrícula — {{ m.aluno.nome }}{% endblock %}
+{% block sheet %}
+<h1 class="print-title">Ficha de matrícula {{ m.ano_letivo }}</h1>
+
+<div class="ficha-top">
+  <div class="flex-grow-1">
+    <h2>Dados da criança</h2>
+    <table class="print-table">
+      <tr><th>Nome</th><td colspan="3">{{ m.aluno.nome }}</td></tr>
+      <tr><th>Nascimento</th><td>{{ m.aluno.data_nascimento|date:"d/m/Y" }} ({{ m.aluno.idade }})</td><th>Sexo</th><td>{{ m.aluno.get_sexo_display|default:"—" }}</td></tr>
+      <tr><th>CPF</th><td>{{ m.aluno.cpf|default:"—" }}</td><th>Certidão</th><td>{{ m.aluno.certidao_nascimento|default:"—" }}</td></tr>
+      <tr><th>Endereço</th><td colspan="3">{{ m.aluno.endereco|default:"—" }}{% if m.aluno.bairro %}, {{ m.aluno.bairro }}{% endif %}{% if m.aluno.cidade %} — {{ m.aluno.cidade }}{% endif %}</td></tr>
+    </table>
+  </div>
+  <div class="foto-34">{% if m.aluno.foto %}<img src="{{ m.aluno.foto.url }}" alt="Foto de {{ m.aluno.nome }}">{% else %}<span>Foto 3x4</span>{% endif %}</div>
+</div>
+
+<h2>Saúde e cuidado</h2>
+<table class="print-table">
+  <tr><th>Alergias</th><td>{{ m.aluno.alergias|default:"Nenhuma informada"|linebreaksbr }}</td></tr>
+  <tr><th>Observações</th><td>{{ m.aluno.observacoes_cuidado|default:"Nenhuma"|linebreaksbr }}</td></tr>
+</table>
+
+<h2>Responsáveis</h2>
+<table class="print-table">
+  <thead><tr><th>Nome</th><th>Parentesco</th><th>CPF</th><th>Telefone</th><th>Papel</th></tr></thead>
+  {% for r in m.aluno.responsaveis.all %}
+  <tr><td>{{ r.nome }}</td><td>{{ r.get_parentesco_display }}</td><td>{{ r.cpf|default:"—" }}</td><td>{{ r.telefone }}</td>
+  <td>{% if r.responsavel_legal %}Legal{% endif %}{% if r.responsavel_legal and r.responsavel_financeiro %}, {% endif %}{% if r.responsavel_financeiro %}Financeiro{% endif %}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Contatos de emergência</h2>
+<table class="print-table">
+  <thead><tr><th>Nome</th><th>Relação</th><th>Telefone</th><th>Pode buscar</th></tr></thead>
+  {% for c in m.aluno.contatos_emergencia.all %}
+  <tr><td>{{ c.nome }}</td><td>{{ c.parentesco }}</td><td>{{ c.telefone }}</td><td>{% if c.autorizado_buscar %}Sim{% else %}Não{% endif %}</td></tr>
+  {% endfor %}
+</table>
+
+<div class="avoid-break">
+<h2>Matrícula</h2>
+<table class="print-table">
+  <tr><th>Tipo</th><td>{{ m.get_tipo_display }}</td><th>Data</th><td>{{ m.data_matricula|date:"d/m/Y" }}</td></tr>
+  <tr><th>Turma</th><td>{{ m.turma.nome }}</td><th>Turno</th><td>{{ m.get_turno_display }}</td></tr>
+  <tr><th>Taxa de matrícula</th><td>R$ {{ m.taxa_matricula|floatformat:"2g" }} ({% if m.taxa_paga %}paga{% else %}em aberto{% endif %})</td><th>Mensalidade</th><td>R$ {{ m.mensalidade|floatformat:"2g" }} · vence dia {{ m.dia_vencimento }}{% if m.desconto_percentual %}<br>Desconto de {{ m.desconto_percentual|floatformat:"-2" }}%: R$ {{ m.mensalidade_liquida|floatformat:"2g" }}{% endif %}</td></tr>
+</table>
+
+<h2>Documentos</h2>
+<table class="print-table">
+  {% for d in m.documentos.all %}
+  <tr><td>{{ d.get_tipo_display }}</td><td style="width:30%">{% if d.entregue %}☑ Entregue{% if d.data_entrega %} em {{ d.data_entrega|date:"d/m/Y" }}{% endif %}{% else %}☐ Pendente{% endif %}</td></tr>
+  {% endfor %}
+</table>
+</div>
+
+<div class="row sign-row avoid-break">
+  <div class="col-6"><div class="sign-line">Responsável</div></div>
+  <div class="col-6"><div class="sign-line">Secretaria — {{ escola.nome }}</div></div>
+</div>
+{% endblock %}

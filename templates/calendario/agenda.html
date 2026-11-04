@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load calendario_extras %}
+{% block title %}Próximos eventos | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div><h1 class="page-title">Próximos eventos</h1><p class="mb-0 text-secondary">Nos próximos 120 dias</p></div>
+    <a class="btn btn-outline-primary" href="{% url 'calendario' %}">Ver o mês</a>
+  </div>
+  {% for ev in eventos %}
+    <div class="agenda-dia">
+      <div class="agenda-data"><strong>{{ ev.data_inicio.day }}</strong><span>{{ ev.data_inicio|date:"M" }}</span></div>
+      <div class="agenda-itens">
+        <a class="agenda-item cat-{{ ev.categoria }}" href="{% url 'evento_detail' ev.pk %}">{{ ev.titulo }}
+          <small>{{ rotulos|get_item:ev.categoria }}{% if ev.varios_dias %} · até {{ ev.data_fim|date:"d/m" }}{% endif %}{% if ev.hora_inicio %} · {{ ev.hora_inicio|time:"H:i" }}{% endif %}{% if ev.sem_aula %} · sem aula{% endif %}</small></a>
+      </div>
+    </div>
+  {% empty %}<div class="empty">Nenhum evento nos próximos dias.</div>{% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{% if album %}Editar álbum{% else %}Novo álbum{% endif %} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:1000px">
+  <div class="page-bar"><h1 class="page-title">{% if album %}{{ album.titulo }}{% else %}Novo álbum de fotos{% endif %}</h1>
+    {% if album %}<a class="btn btn-outline-primary" href="{% url 'album_detail' album.pk %}">Ver como o público vê</a>{% endif %}</div>
+  <form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <fieldset class="panel"><legend>Sobre o álbum</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.titulo col="col-md-8" %}
+        {% include "partials/field.html" with field=form.data_atividade col="col-md-4" %}
+        {% include "partials/field.html" with field=form.descricao col="col-12" %}
+        {% include "partials/field.html" with field=form.visibilidade col="col-md-6" %}
+        {% include "partials/field.html" with field=form.autorizacao_imagem col="col-12" %}
+      </div>
+      <div class="care-box mt-3" role="note">Fotos de crianças só devem ser publicadas com autorização dos responsáveis. Álbuns em <strong>rascunho</strong> só a equipe vê; <strong>só com login</strong> reserva as fotos a quem tem conta; <strong>qualquer pessoa</strong> abre para toda a internet.</div>
+    </fieldset>
+
+    <fieldset class="panel"><legend>Fotos</legend>
+      <div class="row g-3"><div class="col-12">
+        <label class="form-label" for="{{ form.fotos.id_for_label }}">{{ form.fotos.label }}</label>
+        {{ form.fotos }}<div class="form-text">{{ form.fotos.help_text }}</div>
+        {% for e in form.fotos.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+      </div></div>
+      {% if fotos %}
+      <hr><p class="form-text">Escreva uma legenda (opcional), escolha a foto de capa ou marque as que quer remover. Salve para aplicar.</p>
+      <div class="gerenciar-fotos">
+        {% for f in fotos %}
+        <div class="gf-item">
+          <img src="{% url 'foto_arquivo' f.pk 'mini' %}" alt="{{ f.legenda|default:'Foto do álbum' }}" loading="lazy">
+          <input class="form-control form-control-sm" name="legenda_{{ f.pk }}" value="{{ f.legenda }}" maxlength="200" placeholder="Legenda" aria-label="Legenda da foto {{ forloop.counter }}">
+          <div class="d-flex justify-content-between small mt-1">
+            <label class="form-check-label"><input class="form-check-input" type="radio" name="capa" value="{{ f.pk }}" {% if album.capa_id == f.pk %}checked{% endif %}> Capa</label>
+            <label class="form-check-label text-danger"><input class="form-check-input" type="checkbox" name="remover_{{ f.pk }}"> Remover</label>
+          </div>
+        </div>{% endfor %}
+      </div>
+      {% endif %}
+    </fieldset>
+
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <div>{% if album %}<button class="btn btn-outline-danger" type="submit" form="form-excluir" onclick="return confirm('Excluir o álbum e todas as fotos? Não dá para desfazer.');">Excluir álbum</button>{% endif %}</div>
+      <div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{% url 'album_list' %}">Voltar</a><button class="btn btn-primary" type="submit">Salvar álbum</button></div>
+    </div>
+  </form>
+  {% if album %}<form id="form-excluir" method="post" action="{% url 'album_delete' album.pk %}">{% csrf_token %}</form>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Frequência diária | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4 freq">
+  <div class="page-bar">
+    <div><h1 class="page-title mb-1">Frequência diária</h1>
+      <p class="mb-0 text-secondary">Escolha o dia e a turma para fazer a chamada.</p></div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'frequencia_consulta_aluno' %}"><i class="bi bi-person-lines-fill" aria-hidden="true"></i> Por aluno</a>
+      <a class="btn btn-outline-primary" href="{% url 'frequencia_relatorio' %}"><i class="bi bi-table" aria-hidden="true"></i> Relatórios</a>
+    </div>
+  </div>
+
+  <form method="get" class="freq-dia panel" aria-label="Escolher o dia">
+    <a class="btn btn-outline-primary" href="?data={{ ontem|date:'Y-m-d' }}" aria-label="Dia anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+    <div class="freq-dia-centro">
+      <label class="visually-hidden" for="data">Data</label>
+      <input class="form-control form-control-lg" type="date" id="data" name="data" value="{{ dia|date:'Y-m-d' }}" max="{{ hoje|date:'Y-m-d' }}" onchange="this.form.submit()">
+      <strong class="freq-dia-extenso">{{ dia|date:"l, d \d\e F"|capfirst }}{% if dia == hoje %} · hoje{% endif %}</strong>
+    </div>
+    {% if amanha %}<a class="btn btn-outline-primary" href="?data={{ amanha|date:'Y-m-d' }}" aria-label="Dia seguinte"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+    {% else %}<span class="btn btn-outline-primary disabled" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>{% endif %}
+    <noscript><button class="btn btn-primary">Ir</button></noscript>
+  </form>
+
+  {% if not letivo %}<div class="alert alert-warning mt-3" role="alert"><i class="bi bi-info-circle" aria-hidden="true"></i> Pelo calendário, este dia não é letivo ({{ motivo }}). Você ainda pode registrar a chamada se houve aula (por exemplo, uma reposição).</div>{% endif %}
+
+  {% if not ano %}
+    <div class="alert alert-info mt-3">Cadastre um ano letivo e as turmas em <a href="{% url 'administracao' %}">Administração</a> para começar.</div>
+  {% else %}
+  <h2 class="h5 mt-4 mb-3">Turmas de {{ ano }}</h2>
+  <div class="freq-turmas">
+    {% for c in cartoes %}
+    <a class="freq-turma {% if c.chamada %}feita{% endif %}" href="{% url 'frequencia_chamada' c.turma.pk dia|date:'Y-m-d' %}">
+      <span class="freq-turma-nome"><strong>{{ c.turma.nome }}</strong><small>{{ c.turma.get_turno_display }} · {{ c.alunos }} aluno{{ c.alunos|pluralize }}</small></span>
+      {% if c.chamada %}
+        <span class="freq-turma-estado ok"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Chamada feita</span>
+        <span class="freq-turma-numeros">{{ c.resumo.presencas }} presentes · {{ c.resumo.faltas }} falta{{ c.resumo.faltas|pluralize }}</span>
+      {% else %}
+        <span class="freq-turma-estado"><i class="bi bi-circle" aria-hidden="true"></i> Chamada pendente</span>
+        <span class="freq-turma-numeros">Toque para fazer a chamada</span>
+      {% endif %}
+    </a>
+    {% empty %}
+    <p class="text-secondary">Nenhuma turma cadastrada neste ano letivo.</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

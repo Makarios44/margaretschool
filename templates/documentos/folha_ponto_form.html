@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Folha de ponto | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:860px">
+  <div class="page-bar"><div><h1 class="page-title mb-1">Folha de ponto de professores</h1>
+    <p class="mb-0 text-secondary">Informe o nome e o mês; a folha sai pronta para imprimir ou salvar em PDF.</p></div>
+    <a class="btn btn-outline-primary" href="{% url 'documento_list' %}">Voltar aos documentos</a></div>
+  <form method="post" class="panel" novalidate>{% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="row g-3">
+      {% include "partials/field.html" with field=form.professores col="col-12" %}
+      {% include "partials/field.html" with field=form.mes col="col-md-4" %}
+      {% include "partials/field.html" with field=form.ano col="col-md-3" %}
+      {% include "partials/field.html" with field=form.cargo col="col-md-5" %}
+      {% include "partials/field.html" with field=form.turma_disciplina col="col-md-6" %}
+      {% include "partials/field.html" with field=form.horario col="col-md-3" %}
+      {% include "partials/field.html" with field=form.carga_semanal col="col-md-3" %}
+      {% include "partials/field.html" with field=form.marcar_feriados col="col-12" %}
+      {% include "partials/field.html" with field=form.sabados col="col-12" %}
+    </div>
+    <div class="d-flex gap-2 justify-content-end mt-4"><button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-printer" aria-hidden="true"></i> Gerar folha de ponto</button></div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ aluno.nome }} | Margaret School{% endblock %}
+{% block content %}
+{% with atual=aluno.matricula_atual %}
+<section class="container py-4">
+  <div class="aluno-head">
+    {% if aluno.foto %}<img class="avatar avatar-xl" src="{{ aluno.foto.url }}" alt="Foto de {{ aluno.nome }}">{% else %}<span class="avatar avatar-xl avatar-ph" aria-hidden="true">{{ aluno.nome|slice:":1" }}</span>{% endif %}
+    <div class="flex-grow-1">
+      <h1 class="page-title mb-1">{{ aluno.nome }}</h1>
+      <p class="mb-2">{{ aluno.idade }} · nascido(a) em {{ aluno.data_nascimento|date:"d/m/Y" }}</p>
+      {% include "partials/situacao.html" with m=atual %}
+      {% if atual %}<span class="ms-2">{{ atual.turma.nome }} · {{ atual.get_turno_display }} · {{ atual.ano_letivo }}</span>{% endif %}
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'aluno_update' aluno.pk %}"><i class="bi bi-pencil" aria-hidden="true"></i> Editar</a>
+      <a class="btn btn-primary" href="{% url 'matricula_create' %}?aluno={{ aluno.pk }}{% if atual %}&tipo=rematricula{% endif %}">{% if atual %}Rematricular{% else %}Matricular{% endif %}</a>
+    </div>
+  </div>
+
+  {% if aluno.alergias or aluno.observacoes_cuidado %}
+  <div class="care-box" role="note">
+    <h2 class="h5"><i class="bi bi-heart-pulse" aria-hidden="true"></i> Atenção no cuidado</h2>
+    {% if aluno.alergias %}<p class="mb-2"><strong>Alergias:</strong> {{ aluno.alergias|linebreaksbr }}</p>{% endif %}
+    {% if aluno.observacoes_cuidado %}<p class="mb-0"><strong>Observações:</strong> {{ aluno.observacoes_cuidado|linebreaksbr }}</p>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="row g-4 mt-1">
+    <div class="col-lg-6">
+      <div class="panel h-100">
+        <h2 class="panel-title">Dados da criança</h2>
+        <dl class="data-list">
+          <dt>Sexo</dt><dd>{{ aluno.get_sexo_display|default:"—" }}</dd>
+          <dt>Naturalidade</dt><dd>{{ aluno.naturalidade|default:"—" }}</dd>
+          <dt>CPF</dt><dd>{{ aluno.cpf|default:"—" }}</dd>
+          <dt>Certidão</dt><dd>{{ aluno.certidao_nascimento|default:"—" }}</dd>
+          <dt>Endereço</dt><dd>{{ aluno.endereco|default:"—" }}{% if aluno.bairro %}, {{ aluno.bairro }}{% endif %}{% if aluno.cidade %} — {{ aluno.cidade }}{% endif %}</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="panel h-100">
+        <h2 class="panel-title">Matrículas</h2>
+        {% for m in matriculas %}
+          <a class="mat-row" href="{% url 'matricula_detail' m.pk %}">
+            <strong>{{ m.ano_letivo }}</strong>
+            <span>{{ m.turma.nome }} · {{ m.get_turno_display }}</span>
+            {% include "partials/situacao.html" with m=m %}
+          </a>
+        {% empty %}<p class="text-secondary mb-0">Ainda sem matrícula.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="panel mt-4">
+    <h2 class="panel-title">Documentos escolares</h2>
+    {% include "documentos/_botoes.html" with a=aluno %}
+    <p class="mb-0 mt-3"><a href="{% url 'documento_list' %}?aluno={{ aluno.pk }}">Ver documentos já emitidos para este aluno</a></p>
+  </div>
+
+  <div class="panel mt-4">
+    <h2 class="panel-title">Responsáveis</h2>
+    <div class="table-responsive">
+      <table class="table table-ms mb-0">
+        <thead><tr><th>Nome</th><th>Parentesco</th><th>Telefone</th><th>E-mail</th><th>Papel</th></tr></thead>
+        <tbody>
+        {% for r in aluno.responsaveis.all %}
+          <tr><td>{{ r.nome }}</td><td>{{ r.get_parentesco_display }}</td><td>{{ r.telefone }}</td><td>{{ r.email|default:"—" }}</td>
+          <td>{% if r.responsavel_legal %}Legal{% endif %}{% if r.responsavel_legal and r.responsavel_financeiro %} · {% endif %}{% if r.responsavel_financeiro %}Financeiro{% endif %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel mt-4">
+    <h2 class="panel-title">Contatos de emergência</h2>
+    <div class="table-responsive">
+      <table class="table table-ms mb-0">
+        <thead><tr><th>Nome</th><th>Relação</th><th>Telefone</th><th>Pode buscar a criança</th></tr></thead>
+        <tbody>
+        {% for c in aluno.contatos_emergencia.all %}
+          <tr><td>{{ c.nome }}</td><td>{{ c.parentesco }}</td><td>{{ c.telefone }}</td><td>{% if c.autorizado_buscar %}Sim{% else %}Não{% endif %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endwith %}
+{% endblock %}

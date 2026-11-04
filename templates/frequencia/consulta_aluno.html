@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Frequência por aluno | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4 freq" style="max-width:760px">
+  <div class="page-bar"><div><h1 class="page-title mb-1">Frequência por aluno</h1>
+    <p class="mb-0 text-secondary">Busque o aluno para ver presenças, faltas e justificativas em um período.</p></div>
+    <a class="btn btn-outline-primary" href="{% url 'frequencia' %}">Voltar</a></div>
+  <form method="get" class="panel" novalidate>
+    {% if form.aluno.errors %}<div class="alert alert-danger">{{ form.aluno.errors.0 }}</div>{% endif %}
+    <label class="form-label" for="{{ form.aluno.id_for_label }}">Aluno</label>
+    {{ form.aluno }}
+    <div class="d-grid d-sm-flex justify-content-sm-end mt-3"><button class="btn btn-primary btn-lg" type="submit">Ver frequência</button></div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/autocomplete.js' %}"></script>{% endblock %}

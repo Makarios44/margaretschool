@@ -1,0 +1,30 @@
+{% load static %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo_pagina %}Documento{% endblock %}</title>
+  {% if pdf %}<style>{{ css_inline|safe }}</style>{% else %}<link rel="stylesheet" href="{% static 'css/documento.css' %}">{% block css_extra %}{% endblock %}{% endif %}
+</head>
+<body>
+{% if not pdf %}
+  <div class="barra">
+    <button class="btn btn-primario" type="button" onclick="window.print()">Imprimir / salvar em PDF</button>
+    {% if pdf_disponivel %}<a class="btn" href="{% block pdf_url %}#{% endblock %}">Baixar PDF</a>{% endif %}
+    {% block voltar %}<a class="btn" href="{% url 'documento_list' %}">Voltar</a>{% endblock %}
+    {% block barra_extra %}{% endblock %}
+  </div>
+  {% if messages %}<div class="mensagens">{% for m in messages %}<p class="{{ m.tags }}">{{ m }}</p>{% endfor %}</div>{% endif %}
+  {% if pendencias %}
+    <div class="aviso"><strong>Atenção:</strong> faltam dados oficiais da escola neste documento ({{ pendencias|join:", " }}).
+      Preencha-os em <a href="{% url 'adm_escola' %}">Administração → Dados da escola</a> (só administradores) antes de imprimir; documentos já emitidos mantêm os dados do momento da emissão.</div>
+  {% endif %}
+{% endif %}
+
+{% block folha %}<article class="doc">
+  {% block marca %}{% endblock %}
+  {% include "documentos/_cabecalho_escola.html" %}
+  {% block corpo %}{% endblock %}
+</article>{% endblock %}
+</body>
+</html>

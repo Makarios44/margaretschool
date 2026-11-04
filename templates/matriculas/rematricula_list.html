@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Rematrículas | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <h1 class="page-title">Rematrículas</h1>
+    <a class="btn btn-outline-primary" href="{% url 'matricula_list' %}">Voltar às matrículas</a>
+  </div>
+
+  {% if not destino %}
+    <div class="empty"><a href="{% url 'adm_ano_novo' %}">Cadastre um ano letivo</a> para começar.</div>
+  {% else %}
+  <form method="get" class="filters row g-2 align-items-end mb-4">
+    <div class="col-8 col-md-3">
+      <label class="form-label" for="ano">Rematricular para o ano</label>
+      <select class="form-select" id="ano" name="ano">
+        {% for a in anos %}<option value="{{ a.pk }}" {% if a.pk == destino.pk %}selected{% endif %}>{{ a }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-4 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Ver</button></div>
+  </form>
+
+  {% if not anterior %}
+    <div class="empty">Não há ano letivo anterior a {{ destino }} cadastrado.</div>
+  {% else %}
+    <p>Alunos <strong>ativos em {{ anterior }}</strong> que ainda não têm matrícula em <strong>{{ destino }}</strong>:
+      <strong>{{ candidatos|length }}</strong> pendente{{ candidatos|length|pluralize }}{% if ja_feitas %} · {{ ja_feitas }} já rematriculado{{ ja_feitas|pluralize }}{% endif %}.</p>
+    {% if candidatos %}
+    <div class="table-responsive">
+      <table class="table table-ms align-middle">
+        <thead><tr><th>Aluno</th><th>Turma em {{ anterior }}</th><th class="text-end">Mensalidade</th><th><span class="visually-hidden">Ação</span></th></tr></thead>
+        <tbody>
+        {% for a in candidatos %}
+          {% with ant=a.mat_anterior.0 %}
+          <tr>
+            <td><a class="aluno-link" href="{% url 'aluno_detail' a.pk %}">{{ a.nome }}</a></td>
+            <td>{{ ant.turma.nome }} · {{ ant.get_turno_display }}</td>
+            <td class="text-end">R$ {{ ant.mensalidade|floatformat:"2g" }}</td>
+            <td class="text-end"><a class="btn btn-primary btn-sm" href="{% url 'matricula_create' %}?aluno={{ a.pk }}&ano={{ destino.pk }}&tipo=rematricula">Rematricular</a></td>
+          </tr>
+          {% endwith %}
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="empty">Nenhuma rematrícula pendente. Tudo em dia!</div>
+    {% endif %}
+  {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

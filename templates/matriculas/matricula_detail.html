@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Matrícula de {{ m.aluno.nome }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title mb-1">{{ m.aluno.nome }}</h1>
+      <p class="mb-0">{{ m.get_tipo_display }} {{ m.ano_letivo }} · {{ m.turma.nome }} · {{ m.get_turno_display }} &nbsp;{% include "partials/situacao.html" with m=m %}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'matricula_update' m.pk %}"><i class="bi bi-pencil" aria-hidden="true"></i> Editar</a>
+      <a class="btn btn-outline-primary" href="{% url 'matricula_ficha' m.pk %}" target="_blank" rel="noopener"><i class="bi bi-printer" aria-hidden="true"></i> Ficha</a>
+      <a class="btn btn-outline-primary" href="{% url 'frequencia_aluno' m.aluno.pk %}"><i class="bi bi-clipboard-check" aria-hidden="true"></i> Frequência diária</a>
+      <a class="btn btn-outline-primary" href="{% url 'registro_escolar' m.pk %}"><i class="bi bi-journal-text" aria-hidden="true"></i> Registro escolar</a>
+      <a class="btn btn-primary" href="{% url 'matricula_contrato' m.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Contrato</a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="panel h-100">
+        <h2 class="panel-title">Valores</h2>
+        <dl class="data-list">
+          <dt>Data da matrícula</dt><dd>{{ m.data_matricula|date:"d/m/Y" }}</dd>
+          <dt>Taxa de matrícula</dt><dd>R$ {{ m.taxa_matricula|floatformat:"2g" }} — {% if m.taxa_paga %}<span class="badge-ok">Paga</span>{% else %}<span class="badge-alert">Em aberto</span>{% endif %}</dd>
+          <dt>Mensalidade</dt><dd>R$ {{ m.mensalidade|floatformat:"2g" }}</dd>
+          {% if m.desconto_percentual %}<dt>Bolsa / desconto</dt><dd>{{ m.desconto_percentual|floatformat:"-2" }}% — {{ m.desconto_descricao }}<br>Mensalidade líquida: <strong>R$ {{ m.mensalidade_liquida|floatformat:"2g" }}</strong></dd>{% endif %}
+          <dt>Vencimento</dt><dd>Todo dia {{ m.dia_vencimento }}</dd>
+          {% if m.observacoes %}<dt>Observações</dt><dd>{{ m.observacoes|linebreaksbr }}</dd>{% endif %}
+        </dl>
+        <a href="{% url 'aluno_detail' m.aluno.pk %}">Ver cadastro do aluno</a>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <form method="post" action="{% url 'matricula_documentos' m.pk %}" class="panel h-100">
+        {% csrf_token %}
+        <h2 class="panel-title">Documentos</h2>
+        <ul class="doc-list">
+          {% for d in m.documentos.all %}
+          <li>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="entregue" value="{{ d.pk }}" id="doc{{ d.pk }}" {% if d.entregue %}checked{% endif %}>
+              <label class="form-check-label" for="doc{{ d.pk }}">{{ d.get_tipo_display }}</label>
+            </div>
+            {% if d.entregue and d.data_entrega %}<small class="text-secondary">entregue em {{ d.data_entrega|date:"d/m/Y" }}</small>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        <button class="btn btn-primary mt-3" type="submit">Salvar documentos</button>
+      </form>
+      {% if docs_faltando %}
+      <form method="post" action="{% url 'matricula_documento_adicionar' m.pk %}" class="d-flex flex-wrap gap-2 mt-3">{% csrf_token %}
+        <label class="visually-hidden" for="novo-doc">Documento a acrescentar</label>
+        <select class="form-select w-auto" id="novo-doc" name="tipo">{% for v, l in docs_faltando %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+        <button class="btn btn-outline-primary btn-sm" type="submit">Acrescentar à lista</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+      <h2 class="panel-title mb-0">Financeiro</h2>
+      <div class="d-flex flex-wrap gap-2">
+        {% if m.situacao == "ativo" %}<a class="btn btn-primary btn-sm" href="{% url 'gerar_mensalidades' m.pk %}">Gerar mensalidades</a>{% endif %}
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'cobranca_create' %}?matricula={{ m.pk }}">Nova cobrança</a>
+      </div>
+    </div>
+    {% if cobrancas %}
+    <div class="table-responsive">
+      <table class="table table-ms align-middle mb-0">
+        <thead><tr><th>Cobrança</th><th>Vencimento</th><th class="text-end">Valor</th><th>Situação</th><th><span class="visually-hidden">Ação</span></th></tr></thead>
+        <tbody>
+        {% for c in cobrancas %}
+          <tr>
+            <td><a class="aluno-link" href="{% url 'cobranca_detail' c.pk %}">{{ c.descricao }}</a></td>
+            <td>{{ c.vencimento|date:"d/m/Y" }}</td>
+            <td class="text-end">R$ {% if c.paga %}{{ c.valor_pago|floatformat:"2g" }}{% else %}{{ c.valor_liquido|floatformat:"2g" }}{% endif %}</td>
+            <td>{% include "partials/status_fin.html" %}</td>
+            <td class="text-end">{% if c.aberta %}<a class="btn btn-primary btn-sm" href="{% url 'cobranca_receber' c.pk %}">Receber</a>{% elif c.paga %}<a class="btn btn-outline-primary btn-sm" href="{% url 'cobranca_recibo' c.pk %}" target="_blank" rel="noopener">Recibo</a>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-secondary mb-0">Nenhuma cobrança ainda.{% if m.situacao == "ativo" %} Use <strong>Gerar mensalidades</strong> para criar o carnê do ano.{% endif %}</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

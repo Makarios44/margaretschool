@@ -1,0 +1,9 @@
+<div class="formset-row">
+  {% for h in form.hidden_fields %}{{ h }}{% endfor %}
+  {% if form.non_field_errors %}<div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row g-3">
+    {% for field in form.visible_fields %}
+      {% include "partials/field.html" with field=field col=col %}
+    {% endfor %}
+  </div>
+</div>

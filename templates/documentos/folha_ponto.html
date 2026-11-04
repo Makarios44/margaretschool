@@ -1,0 +1,32 @@
+{% extends "documentos/base_doc.html" %}
+{% block titulo_pagina %}Folha de ponto — {{ mes_nome }} de {{ ano }}{% endblock %}
+{% block pdf_url %}{% url 'folha_ponto_pdf' %}?{{ consulta }}{% endblock %}
+{% block voltar %}<a class="btn" href="{% url 'folha_ponto_form' %}">Trocar nome ou mês</a>{% endblock %}
+{% block folha %}
+{% for nome in professores %}
+<article class="doc doc-compacto folha-ponto">
+  {% include "documentos/_cabecalho_escola.html" %}
+  <h1 class="doc-titulo">Folha de ponto — {{ mes_nome }} de {{ ano }}</h1>
+  <table class="doc-tabela ident">
+    <tr><th style="width:27mm">Professor(a)</th><td colspan="3"><strong>{{ nome }}</strong></td></tr>
+    <tr><th>Cargo / função</th><td>{{ cargo }}</td><th style="width:27mm">Turma / disc.</th><td>{{ turma_disciplina|default:"" }}</td></tr>
+    <tr><th>Horário</th><td>{{ horario|default:"" }}</td><th>Carga semanal</th><td>{{ carga_semanal|default:"" }}</td></tr>
+  </table>
+  <table class="ponto">
+    <colgroup><col style="width:8mm"><col style="width:10mm"><col style="width:16mm"><col style="width:16mm"><col style="width:16mm"><col style="width:16mm"><col style="width:15mm"><col style="width:44mm"><col style="width:37mm"></colgroup>
+    <thead><tr><th>Dia</th><th>Sem.</th><th>Entrada</th><th>Saída<br>intervalo</th><th>Volta<br>intervalo</th><th>Saída</th><th>Total<br>horas</th><th>Assinatura</th><th>Observações</th></tr></thead>
+    <tbody>
+    {% for l in linhas %}
+      {% if l.fechado %}<tr class="fechado"><td>{{ l.dia }}</td><td>{{ l.semana }}</td><td colspan="7" class="rotulo">{{ l.rotulo }}</td></tr>
+      {% else %}<tr><td>{{ l.dia }}</td><td>{{ l.semana }}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>{% endif %}
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="ponto-totais"><span>Total de horas no mês:</span><span>Dias trabalhados:</span><span>Faltas / atestados:</span></div>
+  <div class="assinaturas">
+    <div>{{ nome }}<br><strong>Professor(a)</strong></div>
+    <div>{{ esc.diretor|default:"______________________________" }}<br><strong>Direção / Coordenação</strong></div>
+  </div>
+</article>
+{% endfor %}
+{% endblock %}

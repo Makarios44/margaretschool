@@ -1,0 +1,6 @@
+<nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Seções do financeiro">
+  <a class="btn btn-sm {% if aba == 'painel' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'financeiro_painel' %}"><i class="bi bi-graph-up" aria-hidden="true"></i> Painel</a>
+  <a class="btn btn-sm {% if aba == 'cobrancas' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'cobranca_list' %}"><i class="bi bi-cash-coin" aria-hidden="true"></i> Cobranças</a>
+  <a class="btn btn-sm {% if aba == 'despesas' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'despesa_list' %}"><i class="bi bi-bag" aria-hidden="true"></i> Despesas</a>
+  <a class="btn btn-sm {% if aba == 'relatorio' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'relatorio_mensal' %}"><i class="bi bi-bar-chart" aria-hidden="true"></i> Relatório mensal</a>
+</nav>

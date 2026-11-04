@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{% if c %}Editar cobrança{% else %}Nova cobrança{% endif %} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><h1 class="page-title">{% if c %}Editar cobrança{% else %}Nova cobrança{% endif %}</h1></div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <fieldset class="panel">
+      <legend>Cobrança</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.matricula col="col-md-6" %}
+        {% include "partials/field.html" with field=form.tipo col="col-md-3" %}
+        {% include "partials/field.html" with field=form.vencimento col="col-md-3" %}
+        {% include "partials/field.html" with field=form.descricao col="col-md-6" %}
+        {% include "partials/field.html" with field=form.valor col="col-md-3" %}
+        {% include "partials/field.html" with field=form.desconto col="col-md-3" %}
+        {% include "partials/field.html" with field=form.motivo_desconto col="col-md-6" %}
+        {% include "partials/field.html" with field=form.observacoes col="col-12" %}
+      </div>
+    </fieldset>
+    <div class="d-flex gap-2 justify-content-end">
+      <a class="btn btn-outline-primary" href="{% if c %}{% url 'cobranca_detail' c.pk %}{% else %}{% url 'cobranca_list' %}{% endif %}">Cancelar</a>
+      <button class="btn btn-primary" type="submit">Salvar cobrança</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

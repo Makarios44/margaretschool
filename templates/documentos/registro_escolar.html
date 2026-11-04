@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Registro escolar | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title mb-1">Registro escolar</h1>
+      <p class="mb-0">{{ m.aluno.nome }} · {{ m.turma.nome }} · {{ m.ano_letivo }} · {{ m.turma.get_etapa_display }}</p>
+    </div>
+  </div>
+
+  {% if nota_infantil %}<div class="care-box mb-3" role="note">{{ nota_infantil }}</div>{% endif %}
+  {% if minimo %}
+    <p class="text-secondary">Frequência mínima prevista em lei para esta etapa: <strong>{{ minimo }}%</strong> ({{ base_minimo }}).
+    {% if frequencia is not None %}Frequência atual registrada: <strong>{{ frequencia }}%</strong>.{% endif %}</p>
+  {% endif %}
+
+  {% if aviso_freq %}<div class="alert alert-info" role="status">{{ aviso_freq }}</div>{% endif %}
+  <p><a class="btn btn-outline-primary btn-sm" href="?da_frequencia=1"><i class="bi bi-clipboard-check" aria-hidden="true"></i> Preencher dias letivos e faltas pela frequência diária</a></p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <fieldset class="panel">
+      <legend>Frequência e resultado</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.carga_horaria col="col-md-3" %}
+        {% include "partials/field.html" with field=form.dias_letivos col="col-md-3" %}
+        {% include "partials/field.html" with field=form.faltas col="col-md-3" %}
+        {% include "partials/field.html" with field=form.resultado col="col-md-3" %}
+        {% include "partials/field.html" with field=form.parecer col="col-12" %}
+      </div>
+    </fieldset>
+
+    {% if fundamental %}
+    <fieldset class="panel">
+      <legend>Componentes curriculares</legend>
+      <p class="form-text">Sugestão inicial dos componentes dos anos iniciais; ajuste conforme a matriz curricular da escola.</p>
+      {{ comps.management_form }}
+      {% if comps.non_form_errors %}<div class="alert alert-danger py-2">{{ comps.non_form_errors }}</div>{% endif %}
+      <div id="comp-rows">
+        {% for f in comps %}{% include "partials/formset_row.html" with form=f col="col-md-4" %}{% endfor %}
+      </div>
+      <template id="comp-empty">{% include "partials/formset_row.html" with form=comps.empty_form col="col-md-4" %}</template>
+      <button type="button" class="btn btn-outline-primary btn-sm mt-2" data-add-row="comp"><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar componente</button>
+    </fieldset>
+    {% endif %}
+
+    <div class="d-flex gap-2 justify-content-end">
+      <a class="btn btn-outline-primary" href="{% url 'matricula_detail' m.pk %}">Cancelar</a>
+      <button class="btn btn-primary" type="submit">Salvar registro</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

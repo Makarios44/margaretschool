@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Painel | Margaret School{% endblock %}
+
+{% block content %}
+<section class="dash-head">
+  <div class="container py-5">
+    <h1 class="dash-title">Olá, {{ user.first_name|default:user.username }}!</h1>
+    <p class="dash-sub mb-0">Este é o seu painel na Margaret School.</p>
+  </div>
+</section>
+
+<section class="container py-5">
+  <h2 class="h4 mb-4">Módulos</h2>
+  <div class="row g-4">
+    {% if user.is_staff %}
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-blue" href="{% url 'aluno_list' %}">
+        <i class="bi bi-people" aria-hidden="true"></i>
+        <h3>Alunos</h3>
+        <p>Cadastro, responsáveis, contatos de emergência e saúde.</p>
+      </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-yellow" href="{% url 'pre_matricula_lista' %}">
+        <i class="bi bi-inbox" aria-hidden="true"></i>
+        <h3>Pré-matrículas</h3>
+        <p>Solicitações enviadas pelas famílias pelo link online.</p>
+        {% if pre_pendentes %}<span class="badge-alert">{{ pre_pendentes }} para analisar</span>{% endif %}
+      </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-green" href="{% url 'matricula_list' %}">
+        <i class="bi bi-journal-check" aria-hidden="true"></i>
+        <h3>Matrículas</h3>
+        <p>Matrículas, rematrículas, documentos, fichas e contratos.</p>
+      </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-yellow" href="{% url 'frequencia' %}">
+        <i class="bi bi-clipboard-check" aria-hidden="true"></i>
+        <h3>Frequência diária</h3>
+        <p>Chamada por turma, faltas justificadas e relatórios.</p>
+      </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-yellow" href="{% url 'financeiro_painel' %}">
+        <i class="bi bi-cash-coin" aria-hidden="true"></i>
+        <h3>Financeiro</h3>
+        <p>Mensalidades, despesas, gráficos, recibos e inadimplência.</p>
+      </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-blue" href="{% url 'documento_list' %}">
+        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+        <h3>Documentos escolares</h3>
+        <p>Declarações, histórico, transferência e ficha individual.</p>
+      </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-green" href="{% url 'administracao' %}">
+        <i class="bi bi-gear" aria-hidden="true"></i>
+        <h3>Administração</h3>
+        <p>Anos letivos, turmas, categorias de despesa{% if user.is_superuser %}, usuários e dados da escola{% endif %}.</p>
+      </a>
+    </div>
+    {% endif %}
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-blue" href="{% url 'avisos' %}">
+        <i class="bi bi-megaphone" aria-hidden="true"></i>
+        <h3>Avisos</h3>
+        <p>Comunicados e novidades da escola.</p>
+      </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-yellow" href="{% url 'galeria' %}">
+        <i class="bi bi-images" aria-hidden="true"></i>
+        <h3>Fotos das atividades</h3>
+        <p>Os álbuns de fotos da escola.</p>
+      </a>
+    </div>
+    {% if user.is_staff %}
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-green" href="{% url 'divulgacao' %}">
+        <i class="bi bi-brush" aria-hidden="true"></i>
+        <h3>Divulgação</h3>
+        <p>Anúncios da página inicial (rematrícula, eventos) e álbuns de fotos.</p>
+      </a>
+    </div>
+    {% endif %}
+    <div class="col-md-6 col-lg-4">
+      <a class="module module-green" href="{% url 'calendario' %}">
+        <i class="bi bi-calendar3" aria-hidden="true"></i>
+        <h3>Calendário</h3>
+        <p>Feriados, eventos, provas e dias letivos.</p>
+      </a>
+    </div>
+  </div>
+
+  <div class="panel mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+      <h2 class="panel-title mb-0">Próximos eventos</h2>
+      <a href="{% url 'calendario_agenda' %}">Ver todos</a>
+    </div>
+    {% for ev in proximos %}
+      <a class="mat-row" href="{% url 'evento_detail' ev.pk %}">
+        <span><strong>{{ ev.data_inicio|date:"d/m" }}</strong> · {{ ev.titulo }}</span>
+        <span class="chip cat-{{ ev.categoria }}">{{ ev.get_categoria_display }}</span>
+      </a>
+    {% empty %}<p class="text-secondary mb-0">Nenhum evento à frente. {% if user.is_staff %}<a href="{% url 'feriados_gerar' %}">Gere os feriados do ano.</a>{% endif %}</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

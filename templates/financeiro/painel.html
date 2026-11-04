@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Painel financeiro | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div><h1 class="page-title mb-1">Painel financeiro</h1><p class="mb-0 text-secondary">Receitas, despesas e resultado — {{ periodo }}</p></div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-primary" href="{% url 'despesa_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Lançar despesa</a>
+      <a class="btn btn-outline-primary" href="{% url 'cobranca_create' %}">Nova cobrança</a>
+    </div>
+  </div>
+  {% include "financeiro/_abas.html" with aba="painel" %}
+
+  <form method="get" class="filters row g-2 align-items-end mb-4">
+    <div class="col-6 col-md-2"><label class="form-label" for="ano">Ano</label>
+      <select class="form-select" id="ano" name="ano">{% for a in anos %}<option value="{{ a }}" {% if a == ano %}selected{% endif %}>{{ a }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-3"><label class="form-label" for="mes">Período</label>
+      <select class="form-select" id="mes" name="mes"><option value="">Ano inteiro</option>{% for n, nome in meses_nomes %}<option value="{{ n }}" {% if mes == n %}selected{% endif %}>{{ nome }}</option>{% endfor %}</select></div>
+    <div class="col-12 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Ver</button></div>
+  </form>
+
+  <div class="stats">
+    <div class="stat stat-ok"><span class="stat-label">Receitas recebidas</span><span class="stat-value">R$ {{ receitas|floatformat:"2g" }}</span><small>mensalidades e taxas pagas</small></div>
+    <div class="stat stat-bad"><span class="stat-label">Despesas</span><span class="stat-value">R$ {{ despesas_total|floatformat:"2g" }}</span><small>{{ n_despesas }} lançamento{{ n_despesas|pluralize }}</small></div>
+    <div class="stat"><span class="stat-label">Resultado</span><span class="stat-value {% if resultado < 0 %}neg{% else %}pos{% endif %}">{% if resultado < 0 %}− {% endif %}R$ {{ resultado|floatformat:"2g"|cut:"-" }}</span><small>{% if resultado < 0 %}as despesas passaram das receitas{% else %}receitas menos despesas{% endif %}</small></div>
+    <div class="stat"><span class="stat-label">Inadimplência hoje</span><span class="stat-value">R$ {{ vencido|floatformat:"2g" }}</span><small><a href="{% url 'cobranca_list' %}?mes=&status=vencida">ver cobranças vencidas</a></small></div>
+  </div>
+
+  <div class="grafico mb-4">
+    <h2>Receitas e despesas por mês — {{ ano }}</h2>
+    <p class="sub">Receitas pelo mês do pagamento; despesas pelo mês do gasto.</p>
+    <div class="legenda-g"><span><i class="cor-rec"></i>Receitas</span><span><i class="cor-gas"></i>Despesas</span></div>
+    <div class="gb" role="img" aria-label="Gráfico de barras de receitas e despesas de cada mês de {{ ano }}. Os valores estão na tabela abaixo.">
+      {% for m in meses %}<div class="gb-grupo {% if m.selecionado %}sel{% endif %}"><div class="gb-barras">
+        <span class="gb-barra rec" style="height:{{ m.pct_rec|stringformat:'.1f' }}%" title="Receitas de {{ m.nome }}: R$ {{ m.receitas|floatformat:'2g' }}"></span>
+        <span class="gb-barra gas" style="height:{{ m.pct_gas|stringformat:'.1f' }}%" title="Despesas de {{ m.nome }}: R$ {{ m.despesas|floatformat:'2g' }}"></span></div></div>{% endfor %}
+    </div>
+    <div class="gb-rotulos">{% for m in meses %}<span class="{% if m.selecionado %}sel{% endif %}">{{ m.nome }}</span>{% endfor %}</div>
+    <details class="mt-3"><summary class="fw-bold">Ver os valores em tabela</summary>
+      <div class="table-responsive mt-2"><table class="table table-ms mb-0">
+        <thead><tr><th>Mês</th><th class="text-end">Receitas</th><th class="text-end">Despesas</th><th class="text-end">Saldo</th></tr></thead>
+        <tbody>{% for m in meses %}<tr><td>{{ m.nome }}</td><td class="text-end">R$ {{ m.receitas|floatformat:"2g" }}</td><td class="text-end">R$ {{ m.despesas|floatformat:"2g" }}</td><td class="text-end {% if m.saldo < 0 %}neg{% elif m.saldo > 0 %}pos{% endif %}">{% if m.saldo < 0 %}− {% endif %}R$ {{ m.saldo|floatformat:"2g"|cut:"-" }}</td></tr>{% endfor %}</tbody>
+      </table></div></details>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-lg-7">
+      <div class="grafico h-100">
+        <h2>Despesas por categoria</h2><p class="sub">{{ periodo }}</p>
+        {% if categorias %}
+        <div class="pizza-area">
+          <div class="pizza" style="background: conic-gradient({{ gradiente }})" role="img" aria-label="Gráfico de pizza das despesas por categoria. Os valores estão na lista ao lado."></div>
+          <ul class="cat-lista">{% for c in categorias %}<li><i style="background:{{ c.cor }}"></i><span>{{ c.nome }}</span><span>R$ {{ c.total|floatformat:"2g" }} <small>({{ c.pct|floatformat:1 }}%)</small></span></li>{% endfor %}</ul>
+        </div>
+        {% else %}<div class="empty">Nenhuma despesa lançada neste período. <a href="{% url 'despesa_create' %}">Lance a primeira.</a></div>{% endif %}
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="grafico h-100">
+        <h2>Maiores gastos</h2><p class="sub">{{ periodo }}</p>
+        {% if maiores %}<ul class="rank">{% for d in maiores %}<li><div class="linha"><a href="{% url 'despesa_detail' d.pk %}">{{ d.descricao }}</a><strong>R$ {{ d.valor|floatformat:"2g" }}</strong></div><small class="text-secondary">{{ d.data|date:"d/m/Y" }} · {{ d.categoria.nome }}</small></li>{% endfor %}</ul>
+        {% else %}<p class="text-secondary mb-0">Sem lançamentos no período.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2"><h2 class="panel-title mb-0">Últimos lançamentos</h2><a href="{% url 'despesa_list' %}">Ver todas as despesas</a></div>
+    {% if recentes %}
+    <div class="table-responsive"><table class="table table-ms align-middle mb-0">
+      <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="text-end">Valor</th></tr></thead>
+      <tbody>{% for d in recentes %}<tr><td>{{ d.data|date:"d/m/Y" }}</td><td><a class="aluno-link" href="{% url 'despesa_detail' d.pk %}">{{ d.descricao }}</a></td><td>{{ d.categoria.nome }}</td><td class="text-end">R$ {{ d.valor|floatformat:"2g" }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="text-secondary mb-0">Nenhuma despesa lançada ainda.</p>{% endif %}
+  </div>
+</section>
+{% endblock %}

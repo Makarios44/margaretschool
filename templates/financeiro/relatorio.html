@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Relatório de {{ mes|date:"F \d\e Y" }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <h1 class="page-title">Relatório de {{ mes|date:"F \d\e Y" }}</h1>
+    <div class="d-flex flex-wrap gap-2 no-print">
+      <a class="btn btn-outline-primary" href="?mes={{ anterior|date:'Y-m' }}" aria-label="Mês anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <form method="get" class="d-flex gap-2">
+        <input class="form-control" type="month" name="mes" value="{{ mes|date:'Y-m' }}" aria-label="Mês" pattern="\d{4}-\d{2}">
+        <button class="btn btn-outline-primary" type="submit">Ver</button>
+      </form>
+      <a class="btn btn-outline-primary" href="?mes={{ proximo|date:'Y-m' }}" aria-label="Próximo mês"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      <button class="btn btn-primary" type="button" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i> Imprimir</button>
+    </div>
+  </div>
+
+  {% include "financeiro/_abas.html" with aba="relatorio" %}
+  <h2 class="h4">Receitas do mês <small class="text-secondary fs-6">pagamentos recebidos entre {{ mes|date:"d/m" }} e o fim do mês</small></h2>
+  <div class="stats">
+    <div class="stat stat-ok"><span class="stat-label">Total recebido</span><span class="stat-value">R$ {{ caixa.total|floatformat:"2g" }}</span><small>{{ caixa.n }} pagamento{{ caixa.n|pluralize }}</small></div>
+    <div class="stat stat-bad"><span class="stat-label">Despesas do mês</span><span class="stat-value">R$ {{ despesas_mes|floatformat:"2g" }}</span><small><a href="{% url 'despesa_list' %}?mes={{ mes|date:'Y-m' }}">ver lançamentos</a></small></div>
+    <div class="stat"><span class="stat-label">Resultado do mês</span><span class="stat-value {% if resultado_mes < 0 %}neg{% else %}pos{% endif %}">{% if resultado_mes < 0 %}− {% endif %}R$ {{ resultado_mes|floatformat:"2g"|cut:"-" }}</span><small>recebido menos despesas</small></div>
+    <div class="stat"><span class="stat-label">Multas</span><span class="stat-value">R$ {{ caixa.multas|floatformat:"2g" }}</span></div>
+    <div class="stat"><span class="stat-label">Juros</span><span class="stat-value">R$ {{ caixa.juros|floatformat:"2g" }}</span></div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="panel h-100">
+        <h3 class="panel-title">Por forma de pagamento</h3>
+        {% if por_forma %}
+        <table class="table table-ms mb-0">
+          <thead><tr><th>Forma</th><th class="text-end">Pagamentos</th><th class="text-end">Total</th></tr></thead>
+          <tbody>{% for r in por_forma %}<tr><td>{{ r.nome }}</td><td class="text-end">{{ r.n }}</td><td class="text-end">R$ {{ r.total|floatformat:"2g" }}</td></tr>{% endfor %}</tbody>
+        </table>
+        {% else %}<p class="text-secondary mb-0">Nenhum pagamento neste mês.</p>{% endif %}
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="panel h-100">
+        <h3 class="panel-title">Por tipo de cobrança</h3>
+        {% if por_tipo %}
+        <table class="table table-ms mb-0">
+          <thead><tr><th>Tipo</th><th class="text-end">Pagamentos</th><th class="text-end">Total</th></tr></thead>
+          <tbody>{% for r in por_tipo %}<tr><td>{{ r.nome }}</td><td class="text-end">{{ r.n }}</td><td class="text-end">R$ {{ r.total|floatformat:"2g" }}</td></tr>{% endfor %}</tbody>
+        </table>
+        {% else %}<p class="text-secondary mb-0">Nenhum pagamento neste mês.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <h2 class="h4">Cobranças com vencimento no mês <small class="text-secondary fs-6">situação de hoje</small></h2>
+  <div class="stats">
+    <div class="stat"><span class="stat-label">Previsto</span><span class="stat-value">R$ {{ comp.previsto|floatformat:"2g" }}</span><small>{{ comp.n }} cobrança{{ comp.n|pluralize }}, já com descontos</small></div>
+    <div class="stat stat-ok"><span class="stat-label">Já pago</span><span class="stat-value">R$ {{ comp.pago|floatformat:"2g" }}</span></div>
+    <div class="stat"><span class="stat-label">Em aberto</span><span class="stat-value">R$ {{ comp.aberto|floatformat:"2g" }}</span></div>
+    <div class="stat stat-bad"><span class="stat-label">Inadimplência</span><span class="stat-value">{{ comp.inadimplencia_pct|floatformat:1 }}%</span><small>R$ {{ comp.vencido|floatformat:"2g" }} · {{ comp.n_alunos }} aluno{{ comp.n_alunos|pluralize }}</small></div>
+  </div>
+  <p class="text-secondary">Descontos e bolsas concedidos nestas cobranças: <strong>R$ {{ comp.descontos|floatformat:"2g" }}</strong>.
+    Inadimplência acumulada de todos os meses: <strong>R$ {{ acumulada.total|floatformat:"2g" }}</strong> em {{ acumulada.n }} cobrança{{ acumulada.n|pluralize }}.</p>
+
+  <h3 class="h5 mt-4">Inadimplentes do mês</h3>
+  {% if inadimplentes %}
+  <div class="table-responsive">
+    <table class="table table-ms align-middle">
+      <thead><tr><th>Aluno</th><th>Responsável</th><th>Cobrança</th><th>Vencimento</th><th class="text-end">Atraso</th><th class="text-end">Valor hoje</th></tr></thead>
+      <tbody>
+      {% for c in inadimplentes %}
+        {% with resp=c.matricula.aluno.contratante %}
+        <tr>
+          <td><a class="aluno-link" href="{% url 'cobranca_detail' c.pk %}">{{ c.matricula.aluno.nome }}</a></td>
+          <td>{% if resp %}{{ resp.nome }}<br><small>{{ resp.telefone }}</small>{% else %}—{% endif %}</td>
+          <td>{{ c.descricao }}</td>
+          <td>{{ c.vencimento|date:"d/m/Y" }}</td>
+          <td class="text-end">{{ c.dias_atraso }} dia{{ c.dias_atraso|pluralize }}</td>
+          <td class="text-end">R$ {{ c.valor_atualizado|floatformat:"2g" }}</td>
+        </tr>
+        {% endwith %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty">Nenhuma cobrança vencida em aberto neste mês.</div>
+  {% endif %}
+</section>
+{% endblock %}

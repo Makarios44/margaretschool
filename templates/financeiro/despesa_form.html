@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{% if despesa %}Editar despesa{% else %}Lançar despesa{% endif %} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:900px">
+  <div class="page-bar"><h1 class="page-title">{% if despesa %}Editar despesa{% else %}Lançar despesa{% endif %}</h1></div>
+  <form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <fieldset class="panel"><legend>O que foi comprado</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.descricao col="col-md-8" %}
+        {% include "partials/field.html" with field=form.data col="col-md-4" %}
+        {% include "partials/field.html" with field=form.categoria col="col-md-6" %}
+        {% include "partials/field.html" with field=form.valor col="col-md-3" %}
+        {% include "partials/field.html" with field=form.forma_pagamento col="col-md-3" %}
+        {% include "partials/field.html" with field=form.fornecedor col="col-md-6" %}
+        {% include "partials/field.html" with field=form.numero_documento col="col-md-6" %}
+      </div>
+    </fieldset>
+    <fieldset class="panel"><legend>Comprovante e observações</legend>
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label" for="{{ form.comprovante.id_for_label }}">{{ form.comprovante.label }}</label>
+          {% if despesa.comprovante %}<p class="mb-2"><a href="{{ despesa.comprovante.url }}" target="_blank" rel="noopener">Ver comprovante atual</a> <span class="text-secondary">(enviar outro substitui)</span></p>{% endif %}
+          {{ form.comprovante }}<div class="form-text">{{ form.comprovante.help_text }}</div>
+          {% for e in form.comprovante.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}</div>
+        {% include "partials/field.html" with field=form.observacoes col="col-md-6" %}
+      </div>
+    </fieldset>
+    <div class="d-flex flex-wrap gap-2 justify-content-end">
+      <a class="btn btn-outline-primary" href="{% if despesa %}{% url 'despesa_detail' despesa.pk %}{% else %}{% url 'financeiro_painel' %}{% endif %}">Cancelar</a>
+      {% if not despesa %}<button class="btn btn-outline-primary" type="submit" name="acao" value="salvar_e_novo">Salvar e lançar outra</button>{% endif %}
+      <button class="btn btn-primary" type="submit">Salvar despesa</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

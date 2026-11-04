@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Gerar link de pré-matrícula | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:760px">
+  <div class="page-bar">
+    <div><h1 class="page-title mb-1">Gerar link de pré-matrícula</h1>
+      <p class="mb-0 text-secondary">Um link individual para enviar a uma família. Vale por 14 dias e só pode ser usado uma vez (um link por criança).</p></div>
+  </div>
+  {% if anos %}
+  <form method="post" class="panel">{% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label" for="ano_letivo">Ano letivo</label>
+        <select class="form-select" id="ano_letivo" name="ano_letivo" required>{% for ano in anos %}<option value="{{ ano.pk }}" {% if ano.atual %}selected{% endif %}>{{ ano.ano }}{% if ano.atual %} (atual){% endif %}</option>{% endfor %}</select>
+      </div>
+      <div class="col-md-8">
+        <label class="form-label" for="observacoes_internas">Identificação interna (opcional)</label>
+        <input class="form-control" id="observacoes_internas" name="observacoes_internas" maxlength="250" placeholder="Ex.: família Silva">
+        <div class="form-text">Só a equipe vê. Ajuda a saber para quem o link foi enviado.</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2 justify-content-end mt-3">
+      <a class="btn btn-outline-primary" href="{% url 'pre_matricula_lista' %}">Cancelar</a>
+      <button class="btn btn-primary" type="submit">Gerar link</button>
+    </div>
+  </form>
+  {% else %}<div class="care-box"><a href="{% url 'adm_ano_novo' %}">Cadastre um ano letivo</a> antes de gerar links.</div>{% endif %}
+</section>
+{% endblock %}

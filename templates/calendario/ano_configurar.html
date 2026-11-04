@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% block title %}Configurar {{ ano.ano|unlocalize }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><h1 class="page-title">Ano letivo {{ ano.ano|unlocalize }}</h1></div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <fieldset class="panel">
+      <legend>Período de aulas</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.inicio_aulas col="col-md-4" %}
+        {% include "partials/field.html" with field=form.fim_aulas col="col-md-4" %}
+        {% include "partials/field.html" with field=form.horas_dia_letivo col="col-md-4" %}
+      </div>
+      <p class="form-text mt-2 mb-0">O mínimo legal é de 800 horas (de 60 minutos) em, no mínimo, 200 dias de efetivo trabalho escolar. As duas condições valem ao mesmo tempo.</p>
+    </fieldset>
+    <fieldset class="panel">
+      <legend>Bimestres / trimestres / semestres</legend>
+      {{ periodos.management_form }}
+      {% if periodos.non_form_errors %}<div class="alert alert-danger py-2">{{ periodos.non_form_errors }}</div>{% endif %}
+      <div id="per-rows">{% for f in periodos %}{% include "partials/formset_row.html" with form=f col="col-md-3" %}{% endfor %}</div>
+      <template id="per-empty">{% include "partials/formset_row.html" with form=periodos.empty_form col="col-md-3" %}</template>
+      <button type="button" class="btn btn-outline-primary btn-sm mt-2" data-add-row="per"><i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar período</button>
+    </fieldset>
+    <div class="d-flex gap-2 justify-content-end">
+      <a class="btn btn-outline-primary" href="{% url 'dias_letivos' %}?ano={{ ano.pk }}">Cancelar</a>
+      <button class="btn btn-primary" type="submit">Salvar</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Links de pré-matrícula | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <h1 class="page-title">Links de pré-matrícula</h1>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'pre_matricula_lista' %}">Solicitações</a>
+      <a class="btn btn-primary" href="{% url 'pre_matricula_criar_link' %}"><i class="bi bi-link-45deg" aria-hidden="true"></i> Gerar link</a>
+    </div>
+  </div>
+  {% if page_obj %}
+  <div class="table-responsive">
+    <table class="table table-ms align-middle">
+      <thead><tr><th>Criado em</th><th>Ano</th><th>Identificação</th><th>Por</th><th>Expira em</th><th>Situação</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+      <tbody>
+      {% for l in page_obj %}
+        <tr>
+          <td>{{ l.criado_em|date:"d/m/Y H:i" }}</td><td>{{ l.ano_letivo.ano }}</td>
+          <td>{{ l.observacoes_internas|default:"—" }}</td>
+          <td>{{ l.criado_por.get_full_name|default:l.criado_por.username }}</td>
+          <td>{{ l.expira_em|date:"d/m/Y" }}</td>
+          <td>{% if l.situacao == "aguardando" %}<span class="badge-alert">{{ l.situacao_display }}</span>{% elif l.situacao == "usado" %}<span class="badge-ok">{{ l.situacao_display }}</span>{% else %}<span class="sit sit-sem">{{ l.situacao_display }}</span>{% endif %}</td>
+          <td class="text-end">
+            {% if l.url %}
+              <button class="btn btn-outline-primary btn-sm" type="button" onclick="navigator.clipboard.writeText('{{ l.url|escapejs }}')">Copiar</button>
+              <form method="post" action="{% url 'pre_matricula_desativar_link' l.pk %}" class="d-inline" onsubmit="return confirm('Desativar este link? A família não poderá mais usá-lo.');">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" type="submit">Desativar</button></form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+  {% else %}<div class="empty">Nenhum link gerado ainda.</div>{% endif %}
+</section>
+{% endblock %}

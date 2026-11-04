@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Turmas | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><h1 class="page-title">Turmas</h1>
+    <div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-primary" href="{% url 'administracao' %}">Administração</a>
+      <a class="btn btn-primary" href="{% url 'adm_turma_nova' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Nova turma</a></div></div>
+  <form method="get" class="filters row g-2 align-items-end mb-4">
+    <div class="col-8 col-md-3"><label class="form-label" for="ano">Ano letivo</label>
+      <select class="form-select" id="ano" name="ano"><option value="">Todos</option>{% for a in anos %}<option value="{{ a.pk }}" {% if ano_id == a.pk|stringformat:"s" %}selected{% endif %}>{{ a.ano }}</option>{% endfor %}</select></div>
+    <div class="col-4 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Filtrar</button></div>
+  </form>
+  {% if turmas %}
+  <div class="table-responsive"><table class="table table-ms align-middle">
+    <thead><tr><th>Turma</th><th>Ano</th><th>Turno</th><th>Etapa</th><th class="text-end">Alunos / vagas</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+    <tbody>{% for t in turmas %}
+      <tr><td><strong>{{ t.nome }}</strong></td><td>{{ t.ano_letivo.ano }}</td><td>{{ t.get_turno_display }}</td><td>{{ t.get_etapa_display }}</td>
+        <td class="text-end">{{ t.ocupadas }}{% if t.vagas %} / {{ t.vagas }}{% if t.ocupadas >= t.vagas %} <span class="badge-alert">Lotada</span>{% endif %}{% endif %}</td>
+        <td class="text-end"><a class="btn btn-outline-primary btn-sm" href="{% url 'adm_turma_editar' t.pk %}">Editar</a>
+          {% if not t.ocupadas %}<form method="post" action="{% url 'adm_turma_excluir' t.pk %}" class="d-inline" onsubmit="return confirm('Excluir a turma {{ t.nome|escapejs }}?');">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" type="submit">Excluir</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty">Nenhuma turma{% if ano_sel %} em {{ ano_sel.ano }}{% endif %}. <a href="{% url 'adm_turma_nova' %}">Cadastre a primeira</a>{% if anos.count > 1 %} ou copie de outro ano abaixo{% endif %}.</div>{% endif %}
+
+  {% if anos.count > 1 %}
+  <form method="post" action="{% url 'adm_turmas_copiar' %}" class="panel mt-4">{% csrf_token %}
+    <h2 class="panel-title">Copiar turmas de um ano para outro</h2>
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4"><label class="form-label" for="origem">Copiar de</label><select class="form-select" id="origem" name="origem">{% for a in anos %}<option value="{{ a.pk }}">{{ a.ano }}</option>{% endfor %}</select></div>
+      <div class="col-md-4"><label class="form-label" for="destino">Para</label><select class="form-select" id="destino" name="destino">{% for a in anos %}<option value="{{ a.pk }}" {% if forloop.first %}selected{% endif %}>{{ a.ano }}</option>{% endfor %}</select></div>
+      <div class="col-md-4 d-grid"><button class="btn btn-primary" type="submit">Copiar turmas</button></div>
+    </div>
+    <p class="form-text mb-0 mt-2">Copia nome, turno, etapa e vagas. Turmas que já existem no ano de destino não são repetidas. Alunos e matrículas não são copiados.</p>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+<div class="ac" data-aluno-autocomplete data-url="{{ url }}" data-url-novo="{{ url_novo }}">
+  <input type="hidden" name="{{ name }}" id="{{ id }}" value="{{ aluno.pk|default:'' }}"{% if desativado %} disabled{% endif %}>
+  <div class="ac-selecionado"{% if not aluno %} hidden{% endif %}>
+    <div class="ac-card"><strong data-ac-nome>{{ aluno.nome }}</strong><small data-ac-detalhe>{{ detalhe }}</small></div>
+    {% if not desativado %}<button type="button" class="btn btn-outline-primary btn-sm" data-ac-trocar>Trocar aluno</button>{% endif %}
+  </div>
+  {% if not desativado %}
+  <div class="ac-busca"{% if aluno %} hidden{% endif %}>
+    <input type="text" class="form-control form-control-lg" id="{{ id }}_busca" autocomplete="off" spellcheck="false"
+           role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="{{ id }}_lista"
+           placeholder="Digite o nome do aluno…">
+    <ul class="ac-lista" id="{{ id }}_lista" role="listbox" hidden></ul>
+    <div class="form-text" data-ac-ajuda aria-live="polite">Digite ao menos 2 letras. A lista vai diminuindo conforme você escreve, até sobrar só o aluno que você procura.</div>
+  </div>
+  {% endif %}
+</div>

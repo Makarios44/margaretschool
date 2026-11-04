@@ -1,0 +1,19 @@
+{% extends "documentos/base_doc.html" %}
+{% block titulo_pagina %}Declaração de matrícula {{ doc.numero }}{% endblock %}
+{% block pdf_url %}{% url 'documento_pdf' doc.pk %}{% endblock %}
+{% block barra_extra %}{% include "documentos/docs/_barra_doc.html" %}{% endblock %}
+{% block marca %}{% include "documentos/docs/_cabecalho_doc.html" %}{% endblock %}
+{% block corpo %}
+{% with a=c.aluno m=c.matricula %}
+{% if doc.anulado %}<div class="anulado-faixa">DOCUMENTO ANULADO em {{ doc.anulado_em|date:"d/m/Y" }} — {{ doc.anulado_motivo }}</div>{% endif %}
+<h1 class="doc-titulo">Declaração de matrícula</h1>
+<p class="doc-texto">Declaramos{% if c.finalidade %}, para fins de {{ c.finalidade }}{% else %}, para os devidos fins{% endif %}, que
+<strong>{{ a.nome|upper }}</strong>, nascido(a) em {{ a.nascimento }}{% if a.naturalidade %}, natural de {{ a.naturalidade }}{% endif %}{% if a.filiacao_texto %}, {{ a.filiacao_texto }}{% endif %},
+encontra-se regularmente matriculado(a) nesta instituição de ensino, na turma <strong>{{ m.turma }}</strong> da {{ m.etapa_nome }},
+no turno {{ m.turno|lower }}, no ano letivo de <strong>{{ m.ano }}</strong>, com matrícula efetivada em {{ m.data_matricula }}.</p>
+<p class="doc-texto">Por ser verdade, firmamos a presente declaração.</p>
+<p class="local-data">{{ c.local_data }}.</p>
+{% include "documentos/docs/_assinaturas.html" %}
+{% include "documentos/docs/_rodape.html" %}
+{% endwith %}
+{% endblock %}

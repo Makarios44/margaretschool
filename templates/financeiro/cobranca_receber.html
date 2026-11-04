@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Receber pagamento | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title mb-1">Receber pagamento</h1>
+      <p class="mb-0">{{ c.descricao }} · {{ c.matricula.aluno.nome }}</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="panel h-100">
+        <h2 class="panel-title">Cobrança</h2>
+        <dl class="data-list">
+          <dt>Vencimento</dt><dd>{{ c.vencimento|date:"d/m/Y" }}</dd>
+          <dt>Valor</dt><dd>R$ {{ c.valor|floatformat:"2g" }}</dd>
+        </dl>
+        <p class="form-text mb-0">Multa de {{ financeiro_cfg.multa_percentual }}% e juros de {{ financeiro_cfg.juros_mensal_percentual }}% ao mês entram automaticamente se o pagamento for depois do vencimento. Você pode ajustar ou zerar os valores.</p>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <form method="post" id="form-pagamento" class="panel" novalidate
+            data-valor="{{ c.valor|stringformat:'s' }}" data-vencimento="{{ c.vencimento|date:'Y-m-d' }}"
+            data-multa="{{ financeiro_cfg.multa_percentual|stringformat:'s' }}" data-juros="{{ financeiro_cfg.juros_mensal_percentual|stringformat:'s' }}">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="row g-3">
+          {% include "partials/field.html" with field=form.data_pagamento col="col-md-6" %}
+          {% include "partials/field.html" with field=form.forma_pagamento col="col-md-6" %}
+          {% include "partials/field.html" with field=form.desconto col="col-md-4" %}
+          {% include "partials/field.html" with field=form.multa col="col-md-4" %}
+          {% include "partials/field.html" with field=form.juros col="col-md-4" %}
+          {% include "partials/field.html" with field=form.observacoes col="col-12" %}
+        </div>
+        <div class="total-box" aria-live="polite">Total a receber: <strong id="total-pagar">R$ {{ c.valor_liquido|floatformat:"2g" }}</strong></div>
+        <div class="d-flex gap-2 justify-content-end">
+          <a class="btn btn-outline-primary" href="{% url 'cobranca_detail' c.pk %}">Cancelar</a>
+          <button class="btn btn-primary" type="submit">Confirmar recebimento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/financeiro.js' %}"></script>{% endblock %}

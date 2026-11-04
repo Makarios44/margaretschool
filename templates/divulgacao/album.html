@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ album.titulo }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><div><h1 class="page-title mb-1">{{ album.titulo }}</h1>
+    <p class="mb-0 text-secondary">{{ album.data_atividade|date:"d/m/Y" }}{% if album.visibilidade == "logados" %} · visível só para quem tem login{% elif album.visibilidade == "rascunho" %} · rascunho (só a equipe vê){% endif %}</p></div>
+    <div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-primary" href="{% url 'galeria' %}">Todos os álbuns</a>
+      {% if user.is_staff %}<a class="btn btn-primary" href="{% url 'album_update' album.pk %}"><i class="bi bi-pencil" aria-hidden="true"></i> Editar</a>{% endif %}</div></div>
+  {% if album.descricao %}<p class="lead">{{ album.descricao }}</p>{% endif %}
+  {% if fotos %}
+  <div class="galeria-grade">
+    {% for f in fotos %}<button type="button" class="foto-item" data-foto-grande="{% url 'foto_arquivo' f.pk 'grande' %}" data-legenda="{{ f.legenda }}" aria-label="Abrir foto {{ forloop.counter }}{% if f.legenda %}: {{ f.legenda }}{% endif %}">
+      <img src="{% url 'foto_arquivo' f.pk 'mini' %}" alt="{{ f.legenda|default:'Foto da atividade' }}" loading="lazy"></button>{% endfor %}
+  </div>
+  {% else %}<div class="empty">Este álbum ainda não tem fotos.</div>{% endif %}
+
+  <dialog id="lightbox" class="lightbox" aria-label="Foto ampliada">
+    <button type="button" class="lb-fechar" data-lb-fechar aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <button type="button" class="lb-nav lb-ant" data-lb-ant aria-label="Foto anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+    <figure><img alt=""><figcaption><span data-lb-legenda></span><small data-lb-contador></small></figcaption></figure>
+    <button type="button" class="lb-nav lb-prox" data-lb-prox aria-label="Próxima foto"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+  </dialog>
+</section>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/galeria.js' %}"></script>{% endblock %}

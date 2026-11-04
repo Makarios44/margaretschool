@@ -1,0 +1,30 @@
+{% extends "matriculas/base_print.html" %}
+{% load financeiro_extras %}
+{% block title %}Recibo {{ c.recibo_numero }}{% endblock %}
+{% block back %}<a class="btn btn-outline-primary" href="{% url 'cobranca_detail' c.pk %}">Voltar</a>{% endblock %}
+{% block sheet %}
+<h1 class="print-title">Recibo nº {{ c.recibo_numero }}</h1>
+<div class="recibo-valor">R$ {{ c.valor_pago|floatformat:"2g" }}</div>
+
+<p>Recebemos de <strong>{% if pagador %}{{ pagador.nome }}{% else %}______________________{% endif %}</strong>
+a importância de <strong>{{ c.valor_pago|extenso }}</strong>, referente a <strong>{{ c.descricao }}</strong>
+do(a) aluno(a) <strong>{{ m.aluno.nome }}</strong>, turma {{ m.turma.nome }} ({{ m.get_turno_display|lower }}), ano letivo {{ m.ano_letivo }}.</p>
+
+<h2>Detalhamento</h2>
+<table class="print-table">
+  <tr><th>Valor da cobrança</th><td class="text-end">R$ {{ c.valor|floatformat:"2g" }}</td></tr>
+  {% if c.desconto %}<tr><th>Desconto{% if c.motivo_desconto %} ({{ c.motivo_desconto }}){% endif %}</th><td class="text-end">− R$ {{ c.desconto|floatformat:"2g" }}</td></tr>{% endif %}
+  {% if c.multa %}<tr><th>Multa</th><td class="text-end">R$ {{ c.multa|floatformat:"2g" }}</td></tr>{% endif %}
+  {% if c.juros %}<tr><th>Juros</th><td class="text-end">R$ {{ c.juros|floatformat:"2g" }}</td></tr>{% endif %}
+  <tr><th>Total pago</th><td class="text-end"><strong>R$ {{ c.valor_pago|floatformat:"2g" }}</strong></td></tr>
+  <tr><th>Vencimento</th><td class="text-end">{{ c.vencimento|date:"d/m/Y" }}</td></tr>
+  <tr><th>Forma de pagamento</th><td class="text-end">{{ c.get_forma_pagamento_display }}</td></tr>
+  <tr><th>Data do pagamento</th><td class="text-end">{{ c.data_pagamento|date:"d/m/Y" }}</td></tr>
+</table>
+
+<p class="mt-4">{{ escola.cidade|default:"______________________" }}, {{ c.data_pagamento|data_extenso }}.</p>
+
+<div class="row sign-row avoid-break">
+  <div class="col-6 offset-3"><div class="sign-line">{{ escola.nome }}{% if escola.cnpj %}<br>CNPJ {{ escola.cnpj }}{% endif %}</div></div>
+</div>
+{% endblock %}

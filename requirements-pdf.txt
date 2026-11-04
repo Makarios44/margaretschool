@@ -1,0 +1,4 @@
+# Opcional: habilita o botão "Baixar PDF" nos documentos escolares.
+# No Windows/macOS exige as bibliotecas do WeasyPrint (veja a documentação oficial).
+# Sem isto, use "Imprimir / salvar em PDF" no navegador.
+weasyprint>=62

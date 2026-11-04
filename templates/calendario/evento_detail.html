@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load calendario_extras %}
+{% block title %}{{ ev.titulo }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title mb-2">{{ ev.titulo }}</h1>
+      <span class="chip cat-{{ ev.categoria }}">{{ ev.get_categoria_display }}</span>
+      {% if not ev.publico %}<span class="badge-alert ms-1">Interno</span>{% endif %}
+      {% if ev.sem_aula %}<span class="badge-alert ms-1">Não há aula</span>{% endif %}
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'calendario_mes' ev.data_inicio.year ev.data_inicio.month %}">Ver no calendário</a>
+      {% if interno %}<a class="btn btn-primary" href="{% url 'evento_update' ev.pk %}"><i class="bi bi-pencil" aria-hidden="true"></i> Editar</a>{% endif %}
+    </div>
+  </div>
+  <div class="panel">
+    <dl class="data-list mb-0">
+      <dt>Quando</dt>
+      <dd>{{ ev.data_inicio|data_longa }}{% if ev.varios_dias %} até {{ ev.data_fim|data_longa }}{% endif %}
+        {% if ev.hora_inicio %}<br>{{ ev.hora_inicio|time:"H:i" }}{% if ev.hora_fim %} às {{ ev.hora_fim|time:"H:i" }}{% endif %}{% endif %}</dd>
+      {% if ev.local %}<dt>Local</dt><dd>{{ ev.local }}</dd>{% endif %}
+      <dt>Para quem</dt><dd>{% if ev.toda_escola %}Toda a escola{% else %}{% for t in ev.turmas.all %}{{ t }}{% if not forloop.last %}; {% endif %}{% endfor %}{% endif %}</dd>
+      {% if ev.descricao %}<dt>Detalhes</dt><dd>{{ ev.descricao|linebreaksbr }}</dd>{% endif %}
+    </dl>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% load calendario_extras %}
+{% block title %}Calendário {{ ano|unlocalize }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <h1 class="page-title">Calendário {{ ano|unlocalize }}</h1>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'calendario_ano' ano|add:'-1' %}" aria-label="Ano anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <a class="btn btn-outline-primary" href="{% url 'calendario_ano' ano|add:'1' %}" aria-label="Próximo ano"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      <a class="btn btn-outline-primary" href="{% url 'calendario' %}">Mês atual</a>
+      <a class="btn btn-primary" href="{% url 'calendario_imprimir' ano %}" target="_blank" rel="noopener"><i class="bi bi-printer" aria-hidden="true"></i> Imprimir / PDF</a>
+    </div>
+  </div>
+
+  <div class="mini-meses">
+    {% for m in meses %}
+    <div class="mini-mes">
+      <h3><a href="{% url 'calendario_mes' ano m.mes %}">{{ m.nome }}</a></h3>
+      <table>
+        <thead><tr>{% for d in dias_semana %}<th>{{ d }}</th>{% endfor %}</tr></thead>
+        <tbody>
+        {% for sem in m.semanas %}<tr>
+          {% for dia in sem %}{% if dia %}<td class="{% if dia.fds %}fds{% endif %} {% if dia.cat %}cat-{{ dia.cat }}{% endif %}" {% if dia.titulo %}title="{{ dia.titulo }}"{% endif %}>{{ dia.n }}</td>{% else %}<td></td>{% endif %}{% endfor %}
+        </tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="legenda">{% for c in legenda %}<span class="chip cat-{{ c }}">{{ rotulos|get_item:c }}</span>{% endfor %}</div>
+
+  <h2 class="h4 mt-4">Datas principais</h2>
+  {% for nome, evs in relacao %}
+    <h3 class="h6 mt-3">{{ nome }}</h3>
+    <ul class="list-unstyled mb-0">
+      {% for ev in evs %}<li class="mb-1"><span class="chip cat-{{ ev.categoria }}">{{ ev.data_inicio|date:"d/m" }}{% if ev.varios_dias %}–{{ ev.data_fim|date:"d/m" }}{% endif %}</span> <a href="{% url 'evento_detail' ev.pk %}">{{ ev.titulo }}</a>{% if ev.sem_aula %} <small class="text-secondary">· sem aula</small>{% endif %}</li>{% endfor %}
+    </ul>
+  {% empty %}<div class="empty">Nenhum evento cadastrado em {{ ano|unlocalize }}.</div>{% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,5 @@
+<nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Seções da divulgação">
+  <a class="btn btn-sm {% if aba == 'anuncios' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'divulgacao' %}"><i class="bi bi-megaphone" aria-hidden="true"></i> Anúncios da página inicial</a>
+  <a class="btn btn-sm {% if aba == 'albuns' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'album_list' %}"><i class="bi bi-images" aria-hidden="true"></i> Álbuns de fotos</a>
+  <a class="btn btn-sm btn-outline-primary" href="{% url 'home' %}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Ver o site</a>
+</nav>

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <div>
+      <h1 class="page-title mb-1">{{ titulo }}</h1>
+      <p class="mb-0">{{ aluno.nome }}</p>
+    </div>
+  </div>
+  {% for a in avisos %}<div class="care-box mb-3" role="note">{{ a }}</div>{% endfor %}
+  <form method="post" class="panel" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <p class="text-secondary">{{ ajuda }}</p>
+    <div class="row g-3">
+      {% for field in form %}
+        {% include "partials/field.html" with field=field col="col-md-6" %}
+      {% endfor %}
+    </div>
+    <div class="d-flex gap-2 justify-content-end mt-3">
+      <a class="btn btn-outline-primary" href="{% url 'aluno_detail' aluno.pk %}">Cancelar</a>
+      <button class="btn btn-primary" type="submit">Emitir documento</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

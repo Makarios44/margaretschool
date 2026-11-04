@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{% if ev %}Editar evento{% else %}Novo evento{% endif %} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><h1 class="page-title">{% if ev %}Editar evento{% else %}Novo evento{% endif %}</h1></div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <fieldset class="panel">
+      <legend>O que e quando</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.titulo col="col-md-8" %}
+        <div class="col-md-4">
+          <label class="form-label" for="id_categoria">Categoria</label>
+          <select name="categoria" id="id_categoria" class="form-select" data-novo="{% if ev %}0{% else %}1{% endif %}">
+            {% for v, l in form.fields.categoria.choices %}<option value="{{ v }}" {% if form.categoria.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+          </select>
+          {% for e in form.categoria.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+        </div>
+        {% include "partials/field.html" with field=form.data_inicio col="col-md-3" %}
+        {% include "partials/field.html" with field=form.data_fim col="col-md-3" %}
+        {% include "partials/field.html" with field=form.hora_inicio col="col-md-3" %}
+        {% include "partials/field.html" with field=form.hora_fim col="col-md-3" %}
+        {% include "partials/field.html" with field=form.local col="col-md-6" %}
+        {% include "partials/field.html" with field=form.descricao col="col-12" %}
+      </div>
+    </fieldset>
+    <fieldset class="panel">
+      <legend>Quem vê e o que muda</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.turmas col="col-md-6" %}
+        <div class="col-md-6">
+          <div class="form-check mb-2">{{ form.sem_aula }}<label class="form-check-label" for="id_sem_aula">{{ form.sem_aula.label }}</label><div class="form-text">{{ form.sem_aula.help_text }}</div></div>
+          <div class="form-check mb-2">{{ form.publico }}<label class="form-check-label" for="id_publico">{{ form.publico.label }}</label><div class="form-text">{{ form.publico.help_text }}</div></div>
+          <div class="form-check">{{ form.repete_anualmente }}<label class="form-check-label" for="id_repete_anualmente">{{ form.repete_anualmente.label }}</label><div class="form-text">{{ form.repete_anualmente.help_text }}</div></div>
+        </div>
+      </div>
+    </fieldset>
+    {{ padroes|json_script:"categoria-padroes" }}
+    <div class="d-flex gap-2 justify-content-between">
+      <div>{% if ev %}<button class="btn btn-outline-danger" type="submit" form="form-excluir" onclick="return confirm('Excluir este evento?');">Excluir</button>{% endif %}</div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{% if ev %}{% url 'evento_detail' ev.pk %}{% else %}{% url 'calendario' %}{% endif %}">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Salvar evento</button>
+      </div>
+    </div>
+  </form>
+  {% if ev %}<form id="form-excluir" method="post" action="{% url 'evento_delete' ev.pk %}">{% csrf_token %}</form>{% endif %}
+</section>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/calendario.js' %}"></script>{% endblock %}

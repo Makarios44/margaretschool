@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Avisos e novidades | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:900px">
+  <div class="page-bar"><h1 class="page-title">Avisos e novidades</h1>{% if user.is_staff %}<a class="btn btn-outline-primary" href="{% url 'divulgacao' %}">Gerenciar</a>{% endif %}</div>
+  {% for a in anuncios %}
+    <article class="aviso-card mb-4">
+      {% if a.imagem %}<img src="{{ a.imagem.url }}" alt="{{ a.alt }}" class="anuncio-img">{% endif %}
+      <div class="anuncio-corpo">
+        <span class="chip-categoria">{{ a.get_categoria_display }}</span>
+        <h2>{{ a.titulo }}</h2>
+        {% if a.texto %}<p>{{ a.texto|linebreaksbr }}</p>{% endif %}
+        {% if a.botao_link %}<a class="btn btn-primary" href="{{ a.botao_link }}">{{ a.botao_texto }}</a>{% endif %}
+        <p class="form-text mb-0 mt-2">Publicado em {{ a.inicio|date:"d/m/Y" }}{% if a.fim %} · até {{ a.fim|date:"d/m/Y" }}{% endif %}</p>
+      </div>
+    </article>
+  {% empty %}<div class="empty">Nenhum aviso no momento.</div>{% endfor %}
+</section>
+{% endblock %}

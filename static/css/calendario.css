@@ -1,0 +1,62 @@
+/* Calendário escolar — vale para o site e para a versão impressa/PDF. */
+.cat-feriado_nacional   { --c: #D64545; --bg: #FDE2E2; --fg: #7A1C1C; }
+.cat-feriado_estadual   { --c: #E8772E; --bg: #FFE6D2; --fg: #7A3A0B; }
+.cat-feriado_municipal  { --c: #7B5CD6; --bg: #ECE6FB; --fg: #3E2A8C; }
+.cat-ponto_facultativo  { --c: #6B7C93; --bg: #EDF1F5; --fg: #33415C; }
+.cat-feriado_escolar    { --c: #138A8A; --bg: #D6F1F1; --fg: #0B5555; }
+.cat-recesso            { --c: #C9A800; --bg: #FFF7B0; --fg: #5C4B00; }
+.cat-sabado_letivo      { --c: #01C058; --bg: #D5F7E4; --fg: #065C2E; }
+.cat-marco              { --c: #0A4A94; --bg: #D9E6F7; --fg: #0A3166; }
+.cat-reuniao_pais       { --c: #007CFC; --bg: #DCEBFF; --fg: #0A4A94; }
+.cat-planejamento       { --c: #3A5BA0; --bg: #E0E8F7; --fg: #1E3466; }
+.cat-avaliacao          { --c: #B83280; --bg: #FADCEC; --fg: #701A4D; }
+.cat-conselho_classe    { --c: #8D6E63; --bg: #EFE6E2; --fg: #4A332B; }
+.cat-entrega_resultados { --c: #6AA121; --bg: #E7F4D3; --fg: #3A5C12; }
+.cat-matriculas         { --c: #0097A7; --bg: #D3F0F4; --fg: #05555F; }
+.cat-evento             { --c: #F08C00; --bg: #FFEBC7; --fg: #6B4000; }
+.cat-comemorativa       { --c: #CC4BAE; --bg: #F9E1F3; --fg: #6B1F57; }
+.cat-outro              { --c: #868E96; --bg: #F1F3F5; --fg: #343A40; }
+.cat-aniversario        { --c: #E64980; --bg: #FFE3EE; --fg: #7A1F3F; }
+
+.chip { display: inline-block; padding: .1rem .55rem; border-radius: 999px; border-left: 5px solid var(--c); background: var(--bg); color: var(--fg); font-size: .82rem; font-weight: 700; }
+.legenda { display: flex; flex-wrap: wrap; gap: .4rem .6rem; margin: 1rem 0; }
+
+/* grade mensal */
+.cal-grade { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 3px solid #06305F; border-radius: 16px; overflow: hidden; background: #fff; }
+.cal-dow { background: #EAF3FF; font-weight: 700; text-align: center; padding: .4rem; font-size: .85rem; border-bottom: 3px solid #FFE81E; }
+.cal-dia { min-height: 108px; padding: .25rem .3rem; border-right: 1px solid #DCE9FA; border-bottom: 1px solid #DCE9FA; background: #fff; font-size: .8rem; overflow: hidden; }
+.cal-dia:nth-child(7n) { border-right: 0; }
+.cal-dia.fora { background: #F5F7FA; color: #7B889A; }
+.cal-dia.fds { background: #FAFBFD; }
+.cal-dia.sem-aula { background: #FFF4F4; }
+.cal-num { display: inline-block; min-width: 1.7rem; height: 1.7rem; line-height: 1.7rem; text-align: center; font-weight: 700; border-radius: 999px; color: inherit; text-decoration: none; }
+.cal-dia.hoje .cal-num { background: #007CFC; color: #fff; }
+a.cal-num:hover { background: #EAF3FF; }
+.cal-ev { display: block; margin-top: 3px; padding: 1px 6px; border-radius: 6px; border-left: 4px solid var(--c); background: var(--bg); color: var(--fg); text-decoration: none; font-size: .74rem; line-height: 1.25; }
+a.cal-ev:hover { filter: brightness(.95); text-decoration: underline; }
+.cal-hora { font-weight: 700; }
+
+/* agenda (lista) */
+.agenda-dia { display: flex; gap: .9rem; padding: .7rem 0; border-bottom: 1px solid #DCE9FA; }
+.agenda-data { flex: none; width: 3.6rem; text-align: center; font-family: "Fredoka", sans-serif; line-height: 1.1; }
+.agenda-data strong { display: block; font-size: 1.6rem; color: #0063CC; }
+.agenda-data span { font-size: .8rem; text-transform: uppercase; }
+.agenda-itens { flex: 1; display: grid; gap: .35rem; }
+.agenda-item { display: block; padding: .3rem .7rem; border-radius: 8px; border-left: 5px solid var(--c); background: var(--bg); color: var(--fg); text-decoration: none; }
+a.agenda-item:hover { text-decoration: underline; }
+.agenda-item small { display: block; opacity: .85; }
+
+/* mini-meses (visão anual e impressão) */
+.mini-meses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.mini-mes h3 { font-size: 11pt; margin: 0 0 3px; text-align: center; color: #0A4A94; }
+.mini-mes table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8pt; font-family: Arial, sans-serif; }
+.mini-mes th { font-weight: 700; color: #555; padding: 1px 0; text-align: center; }
+.mini-mes td { height: 19px; text-align: center; padding: 0; border: 1px solid #E3EAF4; }
+.mini-mes td.fds { color: #8896A8; background: #FAFBFD; }
+.mini-mes td[class*="cat-"] { background: var(--bg); color: var(--fg); font-weight: 700; box-shadow: inset 0 -3px 0 var(--c); }
+@media (max-width: 767px) { .mini-meses { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* barra de progresso dos dias letivos */
+.meta-barra { height: 16px; border-radius: 999px; background: #E3EAF4; overflow: hidden; border: 2px solid #06305F; }
+.meta-barra > span { display: block; height: 100%; background: #01C058; }
+.meta-barra.abaixo > span { background: #FFE81E; }

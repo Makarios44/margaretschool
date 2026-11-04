@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{% if matricula %}Editar matrícula{% else %}Nova matrícula{% endif %} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar">
+    <h1 class="page-title">{% if matricula %}Editar matrícula{% else %}Nova matrícula{% endif %}</h1>
+  </div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+    <fieldset class="panel">
+      <legend>Aluno, turma e turno</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.aluno col="col-md-6" %}
+        {% include "partials/field.html" with field=form.ano_letivo col="col-md-3" %}
+        {% include "partials/field.html" with field=form.tipo col="col-md-3" %}
+        {% include "partials/field.html" with field=form.turma col="col-md-6" %}
+        {% include "partials/field.html" with field=form.data_matricula col="col-md-3" %}
+        {% include "partials/field.html" with field=form.situacao col="col-md-3" %}
+      </div>
+      {% if not matricula %}<p class="form-text mt-3 mb-0">Não encontrou a turma? <a href="{% url 'adm_turma_nova' %}">Cadastre a turma</a> em Administração.</p>{% endif %}
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Valores</legend>
+      <div class="row g-3">
+        {% include "partials/field.html" with field=form.taxa_matricula col="col-md-3" %}
+        {% include "partials/field.html" with field=form.mensalidade col="col-md-3" %}
+        {% include "partials/field.html" with field=form.dia_vencimento col="col-md-3" %}
+        {% include "partials/field.html" with field=form.taxa_paga col="col-md-3" %}
+        {% include "partials/field.html" with field=form.desconto_percentual col="col-md-3" %}
+        {% include "partials/field.html" with field=form.desconto_motivo col="col-md-6" %}
+        {% include "partials/field.html" with field=form.observacoes col="col-12" %}
+      </div>
+    </fieldset>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <a class="btn btn-outline-primary" href="{% if matricula %}{% url 'matricula_detail' matricula.pk %}{% else %}{% url 'matricula_list' %}{% endif %}">Cancelar</a>
+      <button type="submit" class="btn btn-primary">Salvar matrícula</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/autocomplete.js' %}"></script>{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ d.descricao }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:900px">
+  <div class="page-bar">
+    <div><h1 class="page-title mb-1">{{ d.descricao }}</h1><p class="mb-0 text-secondary">{{ d.categoria.nome }} · {{ d.data|date:"d/m/Y" }}</p></div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'despesa_list' %}">Voltar às despesas</a>
+      <a class="btn btn-primary" href="{% url 'despesa_update' d.pk %}"><i class="bi bi-pencil" aria-hidden="true"></i> Editar</a>
+    </div>
+  </div>
+  <div class="row g-4">
+    <div class="col-md-6"><div class="panel h-100"><h2 class="panel-title">Detalhes</h2>
+      <dl class="data-list mb-0">
+        <dt>Valor</dt><dd><strong>R$ {{ d.valor|floatformat:"2g" }}</strong></dd>
+        <dt>Pagamento</dt><dd>{{ d.get_forma_pagamento_display }}</dd>
+        <dt>Fornecedor</dt><dd>{{ d.fornecedor|default:"—" }}</dd>
+        <dt>Nota/documento</dt><dd>{{ d.numero_documento|default:"—" }}</dd>
+        {% if d.observacoes %}<dt>Observações</dt><dd>{{ d.observacoes|linebreaksbr }}</dd>{% endif %}
+        <dt>Lançada</dt><dd>{{ d.criado_em|date:"d/m/Y H:i" }}{% if d.criado_por %} por {{ d.criado_por.get_full_name|default:d.criado_por.username }}{% endif %}</dd>
+      </dl></div></div>
+    <div class="col-md-6"><div class="panel h-100"><h2 class="panel-title">Comprovante</h2>
+      {% if d.comprovante %}
+        {% if d.comprovante_e_imagem %}<a href="{{ d.comprovante.url }}" target="_blank" rel="noopener"><img src="{{ d.comprovante.url }}" alt="Comprovante da despesa" class="img-fluid rounded border"></a>
+        {% else %}<a class="btn btn-outline-primary" href="{{ d.comprovante.url }}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Abrir comprovante (PDF)</a>{% endif %}
+      {% else %}<p class="text-secondary mb-0">Nenhum comprovante anexado.</p>{% endif %}
+    </div></div>
+  </div>
+  <form method="post" action="{% url 'despesa_delete' d.pk %}" class="mt-4" onsubmit="return confirm('Excluir esta despesa? Isso muda os totais do painel.');">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" type="submit">Excluir despesa</button></form>
+</section>
+{% endblock %}

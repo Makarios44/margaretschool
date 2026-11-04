@@ -1,0 +1,7 @@
+{% if not doc.anulado %}
+<form method="post" action="{% url 'documento_anular' doc.pk %}" onsubmit="return confirm('Anular este documento? Ele continuará no registro, marcado como ANULADO.');">
+  {% csrf_token %}
+  <input type="text" name="motivo" placeholder="Motivo da anulação" required maxlength="200" aria-label="Motivo da anulação">
+  <button class="btn btn-perigo" type="submit">Anular documento</button>
+</form>
+{% endif %}

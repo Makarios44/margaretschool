@@ -1,0 +1,28 @@
+{% extends "documentos/base_doc.html" %}
+{% block titulo_pagina %}{{ c.titulo }} {{ doc.numero }}{% endblock %}
+{% block pdf_url %}{% url 'documento_pdf' doc.pk %}{% endblock %}
+{% block barra_extra %}{% include "documentos/docs/_barra_doc.html" %}{% endblock %}
+{% block marca %}{% include "documentos/docs/_cabecalho_doc.html" %}{% endblock %}
+{% block corpo %}
+{% with a=c.aluno %}
+{% if doc.anulado %}<div class="anulado-faixa">DOCUMENTO ANULADO em {{ doc.anulado_em|date:"d/m/Y" }} — {{ doc.anulado_motivo }}</div>{% endif %}
+<h1 class="doc-titulo">{{ c.titulo }}</h1>
+
+<h2>Identificação do(a) aluno(a)</h2>
+<table class="doc-tabela">
+  <tr><th>Nome</th><td colspan="3">{{ a.nome|upper }}</td></tr>
+  <tr><th>Nascimento</th><td>{{ a.nascimento }}</td><th>Naturalidade</th><td>{{ a.naturalidade|default:"—" }}</td></tr>
+  <tr><th>Filiação</th><td colspan="3">{{ a.filiacao_texto|default:"—" }}</td></tr>
+  <tr><th>Certidão de nascimento</th><td colspan="3">{{ a.certidao|default:"—" }}</td></tr>
+</table>
+
+<h2>Vida escolar nesta instituição</h2>
+{% include "documentos/docs/_registros.html" with periodos=c.periodos %}
+{% if c.nota_infantil %}<p class="nota">{{ c.nota_infantil }}</p>{% endif %}
+{% if c.observacoes %}<p class="doc-texto doc-sem-recuo"><strong>Observações:</strong> {{ c.observacoes }}</p>{% endif %}
+
+<p class="local-data">{{ c.local_data }}.</p>
+{% include "documentos/docs/_assinaturas.html" %}
+{% include "documentos/docs/_rodape.html" %}
+{% endwith %}
+{% endblock %}

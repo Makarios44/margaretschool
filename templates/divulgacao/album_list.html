@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Álbuns de fotos | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><div><h1 class="page-title mb-1">Álbuns de fotos</h1><p class="mb-0 text-secondary">Fotos das atividades da escola.</p></div>
+    <a class="btn btn-primary" href="{% url 'album_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Novo álbum</a></div>
+  {% include "divulgacao/_abas.html" %}
+  {% if albuns %}
+  <div class="table-responsive"><table class="table table-ms align-middle">
+    <thead><tr><th>Álbum</th><th>Data</th><th class="text-end">Fotos</th><th>Quem vê</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+    <tbody>{% for a in albuns %}<tr>
+      <td><div class="d-flex align-items-center gap-3">
+        {% if a.foto_capa %}<img class="mini-anuncio" src="{% url 'foto_arquivo' a.foto_capa.pk 'mini' %}" alt="">{% else %}<span class="mini-anuncio mini-sem"><i class="bi bi-image" aria-hidden="true"></i></span>{% endif %}
+        <a class="aluno-link" href="{% url 'album_update' a.pk %}">{{ a.titulo }}</a></div></td>
+      <td>{{ a.data_atividade|date:"d/m/Y" }}</td><td class="text-end">{{ a.n_fotos }}</td>
+      <td>{% if a.visibilidade == "publico" %}<span class="sit sit-ativo">Qualquer pessoa</span>{% elif a.visibilidade == "logados" %}<span class="sit sit-transferido">Só com login</span>{% else %}<span class="sit sit-sem">Rascunho</span>{% endif %}</td>
+      <td class="text-end"><a class="btn btn-outline-primary btn-sm" href="{% url 'album_update' a.pk %}">Editar</a> <a class="btn btn-outline-primary btn-sm" href="{% url 'album_detail' a.pk %}">Ver</a></td></tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty">Nenhum álbum ainda. <a href="{% url 'album_create' %}">Crie o primeiro</a> e envie as fotos de uma atividade.</div>{% endif %}
+</section>
+{% endblock %}

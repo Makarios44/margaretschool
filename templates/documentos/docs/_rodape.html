@@ -1,0 +1,4 @@
+<div class="doc-rodape">
+  <span>Documento nº {{ doc.numero }} · emitido em {{ doc.emitido_em|date:"d/m/Y H:i" }}{% if doc.emitido_por %} por {{ doc.emitido_por.get_full_name|default:doc.emitido_por.username }}{% endif %}</span>
+  <span>{{ esc.nome }}</span>
+</div>

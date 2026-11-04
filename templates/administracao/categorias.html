@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Categorias de despesa | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:860px">
+  <div class="page-bar"><h1 class="page-title">Categorias de despesa</h1>
+    <div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-primary" href="{% url 'administracao' %}">Administração</a>
+      <a class="btn btn-primary" href="{% url 'adm_categoria_nova' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Nova categoria</a></div></div>
+  <div class="table-responsive"><table class="table table-ms align-middle">
+    <thead><tr><th>Categoria</th><th class="text-end">Despesas</th><th>Situação</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+    <tbody>{% for c in categorias %}<tr>
+      <td><strong>{{ c.nome }}</strong></td><td class="text-end">{{ c.n }}</td>
+      <td>{% if c.ativa %}<span class="sit sit-ativo">Ativa</span>{% else %}<span class="sit sit-sem">Desativada</span>{% endif %}</td>
+      <td class="text-end">
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'adm_categoria_editar' c.pk %}">Editar</a>
+        <form method="post" action="{% url 'adm_categoria_ativa' c.pk %}" class="d-inline">{% csrf_token %}<button class="btn btn-outline-primary btn-sm" type="submit">{% if c.ativa %}Desativar{% else %}Ativar{% endif %}</button></form>
+        {% if not c.n %}<form method="post" action="{% url 'adm_categoria_excluir' c.pk %}" class="d-inline" onsubmit="return confirm('Excluir esta categoria?');">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" type="submit">Excluir</button></form>{% endif %}
+      </td></tr>{% endfor %}</tbody></table></div>
+  <p class="form-text">Categorias já usadas em despesas não podem ser excluídas; desative-as para não aparecerem nos próximos lançamentos.</p>
+</section>
+{% endblock %}

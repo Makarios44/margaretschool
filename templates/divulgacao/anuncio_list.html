@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Divulgação | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4">
+  <div class="page-bar"><div><h1 class="page-title mb-1">Divulgação</h1><p class="mb-0 text-secondary">Anúncios que aparecem na página inicial do site (rematrícula, eventos, avisos…).</p></div>
+    <a class="btn btn-primary" href="{% url 'anuncio_create' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Novo anúncio</a></div>
+  {% include "divulgacao/_abas.html" %}
+  {% if anuncios %}
+  <div class="table-responsive"><table class="table table-ms align-middle">
+    <thead><tr><th>Anúncio</th><th>Categoria</th><th>Período</th><th>Situação</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+    <tbody>{% for a in anuncios %}<tr>
+      <td><div class="d-flex align-items-center gap-3">
+        {% if a.imagem %}<img class="mini-anuncio" src="{{ a.imagem.url }}" alt="">{% else %}<span class="mini-anuncio mini-sem"><i class="bi bi-card-text" aria-hidden="true"></i></span>{% endif %}
+        <div><a class="aluno-link" href="{% url 'anuncio_update' a.pk %}">{{ a.titulo }}</a>{% if a.destaque %}<br><small class="text-secondary">no topo da página</small>{% endif %}</div></div></td>
+      <td>{{ a.get_categoria_display }}</td>
+      <td>{{ a.inicio|date:"d/m/Y" }}{% if a.fim %} a {{ a.fim|date:"d/m/Y" }}{% else %} em diante{% endif %}</td>
+      <td>{% if a.situacao == "no_ar" %}<span class="sit sit-ativo">{{ a.situacao_display }}</span>{% elif a.situacao == "agendado" %}<span class="sit sit-transferido">{{ a.situacao_display }}</span>{% else %}<span class="sit sit-sem">{{ a.situacao_display }}</span>{% endif %}</td>
+      <td class="text-end">
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'anuncio_update' a.pk %}">Editar</a>
+        <form method="post" action="{% url 'anuncio_ativo' a.pk %}" class="d-inline">{% csrf_token %}<button class="btn btn-outline-primary btn-sm" type="submit">{% if a.ativo %}Desativar{% else %}Ativar{% endif %}</button></form>
+      </td></tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty">Nenhum anúncio ainda. <a href="{% url 'anuncio_create' %}">Crie o primeiro</a> — por exemplo, a arte de rematrícula.</div>{% endif %}
+</section>
+{% endblock %}

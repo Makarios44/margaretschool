@@ -1,0 +1,24 @@
+{% extends "documentos/base_doc.html" %}
+{% block titulo_pagina %}Documento de transferência {{ doc.numero }}{% endblock %}
+{% block pdf_url %}{% url 'documento_pdf' doc.pk %}{% endblock %}
+{% block barra_extra %}{% include "documentos/docs/_barra_doc.html" %}{% endblock %}
+{% block marca %}{% include "documentos/docs/_cabecalho_doc.html" %}{% endblock %}
+{% block corpo %}
+{% with a=c.aluno m=c.matricula %}
+{% if doc.anulado %}<div class="anulado-faixa">DOCUMENTO ANULADO em {{ doc.anulado_em|date:"d/m/Y" }} — {{ doc.anulado_motivo }}</div>{% endif %}
+<h1 class="doc-titulo">Documento de transferência</h1>
+<p class="doc-texto">Declaramos, para os devidos fins, que <strong>{{ a.nome|upper }}</strong>, nascido(a) em {{ a.nascimento }}{% if a.naturalidade %}, natural de {{ a.naturalidade }}{% endif %}{% if a.filiacao_texto %}, {{ a.filiacao_texto }}{% endif %},
+esteve matriculado(a) nesta instituição de ensino, na turma <strong>{{ m.turma }}</strong> da {{ m.etapa_nome }}, turno {{ m.turno|lower }}, no ano letivo de {{ m.ano }}, com matrícula efetivada em {{ m.data_matricula }},
+e que, por solicitação de seu(s) responsável(is){% if c.motivo %} ({{ c.motivo }}){% endif %}, foi <strong>transferido(a) em {{ c.data_saida }}</strong>{% if c.destino %} para {{ c.destino }}{% endif %}.</p>
+<p class="doc-texto">Seguem, como parte integrante deste documento, os registros escolares do(a) aluno(a) nesta instituição.</p>
+
+<h2>Registros escolares</h2>
+{% include "documentos/docs/_registros.html" with periodos=c.periodos %}
+{% if c.nota_infantil %}<p class="nota">{{ c.nota_infantil }}</p>{% endif %}
+{% if c.observacoes %}<p class="doc-texto doc-sem-recuo"><strong>Observações:</strong> {{ c.observacoes }}</p>{% endif %}
+
+<p class="local-data">{{ c.local_data }}.</p>
+{% include "documentos/docs/_assinaturas.html" %}
+{% include "documentos/docs/_rodape.html" %}
+{% endwith %}
+{% endblock %}

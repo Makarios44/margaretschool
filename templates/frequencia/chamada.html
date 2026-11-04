@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Chamada — {{ turma.nome }} | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-3 freq chamada-pagina">
+  <div class="chamada-topo">
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'frequencia' %}?data={{ dia|date:'Y-m-d' }}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Turmas</a>
+    <div class="chamada-titulo">
+      <h1 class="page-title mb-0">{{ turma.nome }}</h1>
+      <p class="mb-0 text-secondary">{{ turma.get_turno_display }} · {{ dia|date:"D, d/m/Y" }}</p>
+    </div>
+    <div class="chamada-dias">
+      <a class="btn btn-outline-primary btn-sm" href="{% url 'frequencia_chamada' turma.pk anterior|date:'Y-m-d' %}" aria-label="Dia anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      {% if seguinte %}<a class="btn btn-outline-primary btn-sm" href="{% url 'frequencia_chamada' turma.pk seguinte|date:'Y-m-d' %}" aria-label="Dia seguinte"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>{% endif %}
+    </div>
+  </div>
+
+  {% if not letivo %}<div class="alert alert-warning py-2" role="alert"><i class="bi bi-info-circle" aria-hidden="true"></i> Pelo calendário, este dia não é letivo ({{ motivo }}). Salve só se houve aula.</div>{% endif %}
+  {% if chamada %}<p class="small text-secondary mb-2">Chamada já registrada. Salvar de novo atualiza os dados.</p>{% endif %}
+
+  {% if not linhas %}
+    <div class="alert alert-info">Esta turma não tem alunos ativos nesta data.</div>
+  {% else %}
+  <form method="post" id="form-chamada" novalidate>{% csrf_token %}
+    <div class="chamada-acoes">
+      <button type="button" class="btn btn-outline-primary" data-todos="P"><i class="bi bi-check2-all" aria-hidden="true"></i> Todos presentes</button>
+      <span class="small text-secondary">Toque em <strong>Falta</strong> só para quem faltou.</span>
+    </div>
+
+    <ul class="chamada-lista" role="list">
+      {% for l in linhas %}
+      <li class="aluno-chamada{% if l.erro %} com-erro{% endif %}" data-status="{{ l.status }}">
+        <div class="aluno-nome"><strong>{{ l.m.aluno.nome }}</strong>{% if l.m.aluno.alergias %}<span class="aluno-aviso" title="Tem alergia registrada"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i><span class="visually-hidden">Tem alergia registrada</span></span>{% endif %}</div>
+        <fieldset class="seg">
+          <legend class="visually-hidden">Situação de {{ l.m.aluno.nome }}</legend>
+          <input type="radio" class="seg-input" name="status_{{ l.m.pk }}" id="p{{ l.m.pk }}" value="P" {% if l.status == "P" %}checked{% endif %}>
+          <label class="seg-opcao seg-p" for="p{{ l.m.pk }}"><i class="bi bi-check-lg" aria-hidden="true"></i> Presente</label>
+          <input type="radio" class="seg-input" name="status_{{ l.m.pk }}" id="f{{ l.m.pk }}" value="F" {% if l.status == "F" %}checked{% endif %}>
+          <label class="seg-opcao seg-f" for="f{{ l.m.pk }}"><i class="bi bi-x-lg" aria-hidden="true"></i> Falta</label>
+          <input type="radio" class="seg-input" name="status_{{ l.m.pk }}" id="j{{ l.m.pk }}" value="J" {% if l.status == "J" %}checked{% endif %}>
+          <label class="seg-opcao seg-j" for="j{{ l.m.pk }}"><i class="bi bi-file-earmark-medical" aria-hidden="true"></i> Justificada</label>
+        </fieldset>
+        <div class="just">
+          <label class="visually-hidden" for="just{{ l.m.pk }}">Justificativa de {{ l.m.aluno.nome }}</label>
+          <input type="text" class="form-control" id="just{{ l.m.pk }}" name="just_{{ l.m.pk }}" maxlength="200" value="{{ l.just }}"
+                 placeholder="Justificativa (ex.: atestado médico)">
+        </div>
+        {% if l.erro %}<div class="invalid-feedback d-block fw-bold" role="alert">{{ l.erro }}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+
+    <div class="mt-3">
+      <label class="form-label" for="observacao">Observação do dia (opcional)</label>
+      <input class="form-control" id="observacao" name="observacao" maxlength="200" value="{{ observacao }}" placeholder="Ex.: passeio, saída antecipada">
+    </div>
+
+    <div class="chamada-barra" role="region" aria-label="Resumo e salvar">
+      <div class="contadores" aria-live="polite">
+        <span class="cont cont-p"><b id="c-p">0</b> presentes</span>
+        <span class="cont cont-f"><b id="c-f">0</b> faltas</span>
+        <span class="cont cont-j"><b id="c-j">0</b> justificadas</span>
+      </div>
+      <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i> Salvar chamada</button>
+    </div>
+  </form>
+
+  {% if chamada %}
+  <form method="post" action="{% url 'frequencia_chamada_excluir' turma.pk dia|date:'Y-m-d' %}" class="mt-4 mb-5"
+        onsubmit="return confirm('Excluir esta chamada? O dia deixa de contar como aula para a turma.');">{% csrf_token %}
+    <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash" aria-hidden="true"></i> Excluir esta chamada (não houve aula)</button>
+  </form>
+  {% endif %}
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/frequencia.js' %}"></script>{% endblock %}
