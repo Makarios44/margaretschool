@@ -1,5 +1,6 @@
 """Configurações do projeto Margaret School."""
 import os
+import sys
 from decimal import Decimal
 from pathlib import Path
 
@@ -109,11 +110,15 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Em produção os arquivos estáticos saem pelo WhiteNoise, comprimidos e com nome versionado
 # (rode "python manage.py collectstatic" a cada deploy).
+# Se o collectstatic não rodou (sem manifest), o WhiteNoise serve direto das pastas do projeto
+# em vez de derrubar as páginas com "Missing staticfiles manifest entry".
+_MANIFEST_OK = (STATIC_ROOT / "staticfiles.json").exists() or "collectstatic" in sys.argv
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG or not _MANIFEST_OK
                     else "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+WHITENOISE_USE_FINDERS = DEBUG or not _MANIFEST_OK
 
 # Fotos das galerias ficam FORA de MEDIA_ROOT: só saem pelo sistema, respeitando quem pode ver cada álbum.
 MIDIA_PRIVADA = Path(os.environ.get("DJANGO_MIDIA_PRIVADA", BASE_DIR / "midia_privada"))
