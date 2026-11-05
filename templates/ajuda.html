@@ -28,7 +28,51 @@
       <div class="passo-cabeca"><span class="passo-icone"><i class="bi {{ p.icone }}" aria-hidden="true"></i></span>
         <h2 class="passo-titulo"><span class="passo-num">{{ forloop.counter }}.</span> {{ p.titulo }}</h2></div>
       <p class="passo-intro">{{ p.intro|botoes }}</p>
-      <ul class="passo-acoes">{% for a in p.acoes %}<li>{{ a|botoes }}</li>{% endfor %}</ul>
+      {% if p.onde %}<p class="passo-onde"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i> <strong>Onde fica:</strong> {{ p.onde|botoes }}</p>{% endif %}
+
+      {% if p.precisa %}
+      <div class="precisa {% if p.faltam_algum %}precisa-falta{% else %}precisa-ok{% endif %}">
+        <h3 class="precisa-titulo">{% if p.faltam_algum %}Antes de começar, falta preparar:{% else %}Antes de começar: tudo pronto <i class="bi bi-check-circle-fill" aria-hidden="true"></i>{% endif %}</h3>
+        <ul class="precisa-lista">
+          {% for i in p.precisa %}
+          <li class="{% if i.ok %}ok{% else %}falta{% endif %}">
+            <span class="precisa-marca" aria-hidden="true">{% if i.ok %}✔{% else %}✖{% endif %}</span>
+            <span>{{ i.titulo }}<span class="visually-hidden">: {% if i.ok %}já está pronto{% else %}ainda falta{% endif %}</span></span>
+            {% if not i.ok %}<a class="btn btn-warning btn-sm" href="{{ i.url }}">{{ i.botao }}</a>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if p.tipo == "mapa" %}
+      <ul class="mapa">
+        {% for m in p.modulos %}<li><a href="{{ m.url }}"><i class="bi {{ m.icone }}" aria-hidden="true"></i><span><strong>{{ m.nome }}</strong><small>{{ m.descricao }}</small></span></a></li>{% endfor %}
+      </ul>
+      {% elif p.tipo == "comece" %}
+      <p class="comece-resumo"><strong>{{ p.feitos }} de {{ p.itens|length }}</strong> etapas prontas.</p>
+      <ol class="comece">
+        {% for i in p.itens %}
+        <li class="comece-item comece-{{ i.estado }}">
+          <div class="comece-cabeca">
+            <span class="comece-marca" aria-hidden="true">{% if i.estado == "ok" %}✔{% elif i.estado == "bloqueado" %}🔒{% else %}{{ forloop.counter }}{% endif %}</span>
+            <strong class="comece-titulo">{{ i.titulo }}</strong>
+            {% if i.estado == "ok" %}<span class="selo selo-ok">Pronto</span>{% elif i.proximo %}<span class="selo selo-prox">Faça agora</span>{% elif i.estado == "bloqueado" %}<span class="selo selo-bloq">Antes, faça o passo anterior</span>{% endif %}
+          </div>
+          <p class="comece-porque">{{ i.por_que }}</p>
+          <p class="comece-onde"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i> {{ i.onde|botoes }}</p>
+          {% if i.estado == "fazer" %}<a class="btn btn-primary" href="{{ i.url }}">{{ i.botao }}</a>
+          {% elif i.estado == "bloqueado" %}
+            <p class="comece-faltam mb-2">Falta antes: {% for f in i.faltam %}<strong>{{ f.titulo }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+            {% for f in i.faltam %}<a class="btn btn-warning btn-sm" href="{{ f.url }}">{{ f.botao }}</a> {% endfor %}
+          {% elif i.estado == "ok" %}<a class="btn btn-outline-primary btn-sm" href="{{ i.url }}">Abrir de novo</a>{% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+
+      {% if p.acoes %}<ul class="passo-acoes">{% for a in p.acoes %}<li>{{ a|botoes }}</li>{% endfor %}</ul>{% endif %}
+      {% if p.abrir %}<p class="passo-abrir no-print"><a class="btn btn-primary" href="{{ p.abrir.url }}"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> {{ p.abrir.rotulo }}</a></p>{% endif %}
     </li>
     {% endfor %}
   </ol>

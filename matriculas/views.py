@@ -87,8 +87,12 @@ def matricula_form(request, pk=None):
         form = MatriculaForm(
             instance=matricula, initial=None if matricula else _initial_from_get(request)
         )
+    from core.tutorial import faltando
+
     return render(request, "matriculas/matricula_form.html", {
         "form": form, "matricula": matricula,
+        # nova matrícula sem ano letivo, turma ou aluno cadastrados: mostra o que fazer antes
+        "faltando": [] if matricula else faltando(["ano", "turma", "aluno"]),
     })
 
 

@@ -5,7 +5,14 @@
   <div class="page-bar">
     <h1 class="page-title">{% if matricula %}Editar matrícula{% else %}Nova matrícula{% endif %}</h1>
   </div>
-  <form method="post" novalidate>
+  {% if faltando %}
+<div class="alert alert-warning" role="alert">
+  <strong>Antes de matricular, falta preparar:</strong>
+  <ul class="mb-2 mt-1">{% for f in faltando %}<li>{{ f.titulo }}: <a class="fw-bold" href="{{ f.url }}">{{ f.botao }}</a></li>{% endfor %}</ul>
+  <a href="{% url 'ajuda' %}">Ver a ordem certa no tutorial</a>
+</div>
+{% endif %}
+<form method="post" novalidate>
     {% csrf_token %}
     {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
 

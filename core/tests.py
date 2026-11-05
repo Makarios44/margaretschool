@@ -112,9 +112,9 @@ class TutorialTests(TestCase):
         r = self.client.get("/ajuda/")
         self.assertContains(r, "Chamada de todo dia")
         self.assertContains(r, "Financeiro")
-        self.assertNotContains(r, "Cadastre o ano letivo")
+        self.assertNotContains(r, "crie o acesso de cada pessoa")
         self.client.force_login(self.adm)
-        self.assertContains(self.client.get("/ajuda/"), "Cadastre o ano letivo")
+        self.assertContains(self.client.get("/ajuda/"), "crie o acesso de cada pessoa")
 
     def test_botoes_destacados_e_html_escapado(self):
         from .templatetags.ajuda import botoes
@@ -128,3 +128,89 @@ class TutorialTests(TestCase):
         self.assertContains(r, "Abrir o tutorial")
         self.client.logout()
         self.assertNotContains(self.client.get("/"), 'href="/ajuda/"')
+
+
+class TutorialOrdemTests(TestCase):
+    """O tutorial mostra onde fica cada tela e o que precisa existir antes de quê."""
+
+    def setUp(self):
+        U = get_user_model()
+        self.sec = U.objects.create_user("sec3", password="x", is_staff=True)
+        self.adm = U.objects.create_user("adm3", password="x", is_staff=True, is_superuser=True)
+        self.fam = U.objects.create_user("fam3", password="x")
+
+    def pagina(self, usuario):
+        self.client.force_login(usuario)
+        return self.client.get("/ajuda/")
+
+    def test_sistema_vazio_ano_letivo_e_o_primeiro_e_matricula_fica_bloqueada(self):
+        from . import tutorial
+        itens = {i["chave"]: i for i in tutorial.lista_comece(self.adm, tutorial.estado())}
+        self.assertEqual(itens["ano"]["estado"], "fazer")
+        marcados = [k for k, i in itens.items() if i.get("proximo")]
+        self.assertEqual(marcados, ["escola"])  # só um "Faça agora": o primeiro da fila do administrador
+        self.assertEqual(itens["turma"]["estado"], "bloqueado")  # turma depende do ano letivo
+        self.assertEqual(itens["matricula"]["estado"], "bloqueado")
+        self.assertEqual([f["chave"] for f in itens["matricula"]["faltam"]], ["ano", "turma", "aluno"])
+        r = self.pagina(self.adm)
+        self.assertContains(r, "Comece por aqui: a ordem certa")
+        self.assertContains(r, "Antes, faça o passo anterior")
+        self.assertContains(r, "Antes de começar, falta preparar:")
+
+    def test_depois_de_criar_ano_turma_e_aluno_a_matricula_libera(self):
+        from alunos.models import Aluno
+        from matriculas.models import AnoLetivo, Turma
+        from . import tutorial
+        ano = AnoLetivo.objects.create(ano=2027, atual=True)
+        Turma.objects.create(nome="Jardim I", ano_letivo=ano, turno="manha")
+        Aluno.objects.create(nome="Lia Souza", data_nascimento="2022-03-01")
+        itens = {i["chave"]: i for i in tutorial.lista_comece(self.adm, tutorial.estado())}
+        for pronto in ("ano", "turma", "aluno"):
+            self.assertEqual(itens[pronto]["estado"], "ok")
+        self.assertEqual(itens["matricula"]["estado"], "fazer")
+        self.assertEqual(itens["mensalidades"]["estado"], "bloqueado")  # ainda depende da matrícula
+        self.assertEqual(tutorial.faltando(["ano", "turma", "aluno"]), [])
+
+    def test_secretaria_nao_ve_itens_so_de_administrador(self):
+        r = self.pagina(self.sec)
+        self.assertNotContains(r, "Preencher os dados")
+        self.assertNotContains(r, "Criar um acesso")
+        self.assertContains(self.pagina(self.adm), "Preencher os dados")
+
+    def test_familia_nao_recebe_mapa_nem_lista_de_preparacao(self):
+        r = self.pagina(self.fam)
+        self.assertNotContains(r, "Comece por aqui")
+        self.assertNotContains(r, "Onde fica cada coisa")
+        self.assertContains(r, "Onde fica:")  # mas sabe onde ficam calendário e fotos
+
+    def test_mapa_tem_link_de_cada_modulo(self):
+        r = self.pagina(self.sec)
+        for rota in ("/alunos/", "/matriculas/", "/frequencia/", "/financeiro/", "/documentos/", "/administracao/"):
+            self.assertContains(r, f'href="{rota}"')
+
+    def test_passo_de_matricula_mostra_onde_fica_e_o_que_falta(self):
+        r = self.pagina(self.sec)
+        self.assertContains(r, "Menu → Matrículas → Nova matrícula")
+        self.assertContains(r, "Criar uma turma")
+        self.assertContains(r, "NÃO são criadas sozinhas")
+
+    def test_tela_de_nova_matricula_avisa_o_que_falta(self):
+        self.client.force_login(self.sec)
+        r = self.client.get("/matriculas/nova/")
+        self.assertContains(r, "Antes de matricular, falta preparar:")
+        self.assertContains(r, "Criar uma turma")
+
+    def test_tela_de_nova_matricula_sem_aviso_quando_tudo_existe(self):
+        from alunos.models import Aluno
+        from matriculas.models import AnoLetivo, Turma
+        ano = AnoLetivo.objects.create(ano=2027, atual=True)
+        Turma.objects.create(nome="Jardim I", ano_letivo=ano, turno="manha")
+        Aluno.objects.create(nome="Lia Souza", data_nascimento="2022-03-01")
+        self.client.force_login(self.sec)
+        self.assertNotContains(self.client.get("/matriculas/nova/"), "Antes de matricular")
+
+    def test_frequencia_sem_turma_ensina_a_criar(self):
+        from matriculas.models import AnoLetivo
+        AnoLetivo.objects.create(ano=2027, atual=True)
+        self.client.force_login(self.sec)
+        self.assertContains(self.client.get("/frequencia/"), "Criar uma turma")

@@ -42,7 +42,7 @@
       {% endif %}
     </a>
     {% empty %}
-    <p class="text-secondary">Nenhuma turma cadastrada neste ano letivo.</p>
+    <div class="alert alert-warning">Nenhuma turma cadastrada neste ano letivo. <a class="fw-bold" href="{% url 'adm_turma_nova' %}">Criar uma turma</a>. Depois, matricule os alunos em <a href="{% url 'matricula_create' %}">Nova matrícula</a>.</div>
     {% endfor %}
   </div>
   {% endif %}
