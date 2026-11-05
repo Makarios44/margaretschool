@@ -8,4 +8,6 @@ urlpatterns = [
     path("entrar/", views.EscolaLoginView.as_view(), name="login"),
     path("sair/", LogoutView.as_view(), name="logout"),
     path("painel/", views.dashboard, name="dashboard"),
+    path("ajuda/", views.ajuda, name="ajuda"),
+    path("ajuda/concluir/", views.ajuda_concluir, name="ajuda_concluir"),
 ]

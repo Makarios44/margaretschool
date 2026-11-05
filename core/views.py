@@ -4,7 +4,12 @@ from django.contrib.auth.views import LoginView
 from django.conf import settings
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 from django.views.static import serve
+
+from . import tutorial
+from .models import TutorialVisto
 
 
 def home(request):
@@ -36,6 +41,14 @@ class EscolaLoginView(LoginView):
 
     template_name = "login.html"
     redirect_authenticated_user = True
+
+    def get_success_url(self):
+        """Primeiro acesso: leva ao tutorial de boas-vindas (se o login não veio de um link específico)."""
+        destino = super().get_success_url()
+        user = self.request.user
+        if user.is_authenticated and not self.get_redirect_url() and not TutorialVisto.objects.filter(usuario=user).exists():
+            return reverse("ajuda") + "?primeira=1"
+        return destino
 
 
 @login_required
@@ -72,3 +85,22 @@ def midia(request, caminho):
     resposta["Cache-Control"] = "public, max-age=86400" if publico else "private, no-store"
     resposta["X-Content-Type-Options"] = "nosniff"
     return resposta
+
+
+@login_required
+def ajuda(request):
+    """Tutorial passo a passo. Com ?primeira=1 e ainda não visto, abre como boas-vindas."""
+    visto = TutorialVisto.objects.filter(usuario=request.user).exists()
+    return render(request, "ajuda.html", {
+        "passos": tutorial.passos(request.user),
+        "perfil_nome": tutorial.NOMES[tutorial.perfil(request.user)],
+        "primeira": request.GET.get("primeira") == "1" and not visto,
+    })
+
+
+@login_required
+@require_POST
+def ajuda_concluir(request):
+    """Marca o tutorial como visto (concluir ou pular) e leva ao painel."""
+    TutorialVisto.objects.get_or_create(usuario=request.user)
+    return redirect("dashboard")

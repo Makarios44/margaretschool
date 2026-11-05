@@ -50,6 +50,7 @@ Abra http://127.0.0.1:8000/ e rode `python manage.py test` para conferir os test
 | `/documentos/emitir/`        | Escolher o aluno e emitir um documento            |
 | `/documentos/ficha/<aluno>/` | Ficha individual do aluno (dados atuais)          |
 | `/documentos/registros/<mat>/` | Registro escolar: frequência, resultado, parecer |
+| `/ajuda/`                    | Tutorial passo a passo (qualquer pessoa logada)    |
 | `/frequencia/`               | Frequência diária: escolher dia e turma (equipe)  |
 | `/frequencia/chamada/<turma>/<AAAA-MM-DD>/` | Chamada do dia (presente, falta, justificada)  |
 | `/frequencia/aluno/`         | Frequência por aluno e período                    |
@@ -122,6 +123,16 @@ App `frequencia`, feito para uso no celular (botões grandes, uma coluna, barra 
 - **Documentos:** na consulta do aluno, "Gerar declaração de frequência com estes dados" preenche período, dias letivos e faltas. No registro escolar anual, "Preencher … pela frequência diária" preenche os campos (nada é gravado até você salvar).
 
 Ao atualizar um projeto existente: `python manage.py migrate` (cria as tabelas `Chamada` e `Presenca`).
+
+## Tutorial de uso (Ajuda)
+
+Pensado para quem tem pouca familiaridade com tecnologia: letra grande, um assunto por vez, sem termos técnicos.
+
+- **Primeiro acesso:** quando alguém entra pela primeira vez, o login leva direto ao tutorial de boas-vindas (`/ajuda/?primeira=1`). Quem entra por um link específico (`?next=`) vai ao destino pedido. Se a pessoa sair sem concluir, o tutorial aparece de novo no próximo login.
+- **Sempre disponível:** botão **Ajuda** no menu e faixa "Primeira vez por aqui?" no painel.
+- **Conteúdo por perfil:** Família ou professor (painel, calendário, avisos e fotos), Secretaria (+ alunos, matrículas, pré-matrículas, frequência, financeiro, documentos, divulgação) e Administrador (+ administração). O texto fica em `core/tutorial.py`; o que estiver entre `[colchetes]` aparece desenhado como botão.
+- **Acessibilidade:** botões **A−/A+** para o tamanho da letra (lembrado no aparelho), navegação por setas do teclado, funciona sem JavaScript (mostra todos os passos em sequência) e dá para imprimir.
+- A tabela `TutorialVisto` guarda quem já concluiu ou pulou. Rode `python manage.py migrate` ao atualizar.
 
 ## Calendário escolar
 
