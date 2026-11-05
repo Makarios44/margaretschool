@@ -52,6 +52,10 @@ h1, h2, h3, h4, .brand-name { font-family: "Fredoka", "Nunito", sans-serif; font
 .navbar-brand .brand-name { font-size: 1.4rem; color: var(--ms-blue-dark); }
 .navbar-brand img { object-fit: contain; }
 
+.rodape-base:has(> .site-footer) { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+.rodape-base:has(> .site-footer) > main { flex: 1 0 auto; }
+.rodape-base > .site-footer { flex-shrink: 0; margin-top: auto; }
+@media print { .rodape-base:has(> .site-footer) { display: block; min-height: 0; } }
 .site-footer { background: var(--ms-blue); color: #fff; border-top: 4px solid var(--ms-yellow); }
 .site-footer .brand-name { font-size: 1.2rem; }
 
@@ -146,6 +150,8 @@ h1, h2, h3, h4, .brand-name { font-family: "Fredoka", "Nunito", sans-serif; font
 
 .filters .form-label { font-size: .9rem; margin-bottom: .2rem; }
 .table-ms { --bs-table-bg: transparent; }
+/* textos só para leitor de tela (position:absolute) ficam presos na área rolável e não alargam a página no celular */
+.table-responsive { position: relative; }
 .table-ms thead th { background: var(--ms-soft); color: var(--ms-ink); border-bottom: 3px solid var(--ms-yellow); white-space: nowrap; }
 .table-ms tbody tr:hover { background: #F5FAFF; }
 .empty { padding: 2rem; text-align: center; border: 3px dashed #B9D6FA; border-radius: 20px; }
