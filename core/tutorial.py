@@ -6,7 +6,10 @@ Em textos, o que está entre [colchetes] aparece desenhado como botão.
 Passos de módulo também podem ter:
   onde    - caminho no menu ("Menu → Matrículas → Nova matrícula")
   abrir   - (nome da rota, rótulo do botão) para abrir a tela direto
-  precisa - chaves de REQUISITOS que precisam estar prontas antes (aparecem com ✔ ou ✖ e um botão para resolver)
+  precisa - chaves de REQUISITOS que precisam existir antes (lista fixa "Antes de começar", com link para a tela de cada um)
+
+O tutorial só ENSINA: ele não consulta o que já foi cadastrado nem mostra o que está pronto ou pendente.
+(O banco só é consultado por faltando(), usado nos avisos das telas de cadastro, como Nova matrícula.)
 """
 from django.urls import reverse
 
@@ -84,36 +87,28 @@ def estado():
     }
 
 
-def requisito(chave, pronto):
+def requisito(chave):
     r = REQUISITOS[chave]
-    return {"chave": chave, "titulo": r["titulo"], "ok": pronto[chave], "url": reverse(r["rota"]), "botao": r["botao"]}
+    return {"chave": chave, "titulo": r["titulo"], "url": reverse(r["rota"]), "botao": r["botao"]}
 
 
 def faltando(chaves):
-    """Requisitos ainda não prontos (para avisos nas telas de cadastro). Cada item: titulo, url, botao."""
+    """Requisitos que ainda não existem no banco (para avisos nas telas de cadastro). Cada item: titulo, url, botao."""
     pronto = estado()
-    return [requisito(c, pronto) for c in chaves if not pronto[c]]
+    return [requisito(c) for c in chaves if not pronto[c]]
 
 
-def lista_comece(user, pronto):
-    """Lista 'Comece por aqui': cada item pronto, a fazer ou bloqueado (falta algo antes)."""
+def lista_comece(user):
+    """Lista fixa da ordem de preparação, com o que cada etapa precisa antes. Não depende dos dados da escola."""
     admin = user.is_superuser
-    itens, proximo_marcado = [], False
+    visiveis = {k for k, r in REQUISITOS.items() if admin or not r.get("so_admin")}
+    itens = []
     for chave, r in REQUISITOS.items():
-        if r.get("so_admin") and not admin:
+        if chave not in visiveis:
             continue
-        faltam = [requisito(d, pronto) for d in r["depende"] if not pronto[d]]
-        item = {"chave": chave, "titulo": r["titulo"], "onde": r["onde"], "por_que": r["por_que"],
-                "url": reverse(r["rota"]), "botao": r["botao"], "faltam": faltam}
-        if pronto[chave]:
-            item["estado"] = "ok"
-        elif faltam:
-            item["estado"] = "bloqueado"
-        else:
-            item["estado"] = "fazer"
-            item["proximo"] = not proximo_marcado
-            proximo_marcado = True
-        itens.append(item)
+        itens.append({"chave": chave, "titulo": r["titulo"], "onde": r["onde"], "por_que": r["por_que"],
+                      "url": reverse(r["rota"]), "botao": r["botao"],
+                      "precisa": [requisito(d) for d in r["depende"] if d in visiveis]})
     return itens
 
 
@@ -134,9 +129,9 @@ MAPA = {"titulo": "Onde fica cada coisa", "icone": "bi-map", "tipo": "mapa",
         "intro": "Tudo está no [Menu] no alto da tela. Toque em um item abaixo para abrir a tela direto.",
         "acoes": []}
 
-COMECE = {"titulo": "Comece por aqui: a ordem certa", "icone": "bi-list-check", "tipo": "comece",
+COMECE = {"titulo": "A ordem certa das coisas", "icone": "bi-list-check", "tipo": "comece",
           "intro": "Algumas coisas só podem ser feitas depois de outras. Por exemplo: para matricular um aluno, a turma precisa existir antes. "
-                   "Siga a lista de cima para baixo. O que já está pronto aparece marcado.",
+                   "Esta é a ordem para preparar a escola, de cima para baixo.",
           "acoes": []}
 
 CALENDARIO = {"titulo": "Calendário da escola", "icone": "bi-calendar3",
@@ -233,30 +228,26 @@ MODULOS_MAPA = [  # (ícone, nome, para que serve, rota)
 ]
 
 
-def _resolver(passo, pronto, admin):
-    """Transforma 'abrir' e 'precisa' em links e itens com ✔/✖ (itens só de administrador somem para os outros)."""
+def _resolver(passo, admin):
+    """Transforma 'abrir' e 'precisa' em links (itens só de administrador somem para os outros)."""
     p = dict(passo)
     if "abrir" in p:
         rota, rotulo = p["abrir"]
         p["abrir"] = {"url": reverse(rota), "rotulo": rotulo}
     if "precisa" in p:
-        itens = [requisito(c, pronto) for c in p["precisa"] if admin or not REQUISITOS[c].get("so_admin")]
-        p["precisa"] = itens
-        p["faltam_algum"] = any(not i["ok"] for i in itens)
+        p["precisa"] = [requisito(c) for c in p["precisa"] if admin or not REQUISITOS[c].get("so_admin")]
     return p
 
 
 def passos(user):
     p = perfil(user)
     staff = p in ("secretaria", "admin")
-    pronto = estado() if staff else {}
     lista = list(INICIO)
     if staff:
         mapa = dict(MAPA)
         mapa["modulos"] = [{"icone": i, "nome": n, "descricao": d, "url": reverse(r)} for i, n, d, r in MODULOS_MAPA]
         comece = dict(COMECE)
-        comece["itens"] = lista_comece(user, pronto)
-        comece["feitos"] = sum(1 for i in comece["itens"] if i["estado"] == "ok")
+        comece["itens"] = lista_comece(user)
         lista += [mapa, comece]
     lista += [CALENDARIO, AVISOS]
     if staff:
@@ -264,4 +255,4 @@ def passos(user):
     if p == "admin":
         lista += ADMIN
     lista.append(FINAL)
-    return [_resolver(x, pronto, p == "admin") for x in lista]
+    return [_resolver(x, p == "admin") for x in lista]

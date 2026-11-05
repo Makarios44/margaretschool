@@ -131,7 +131,7 @@ class TutorialTests(TestCase):
 
 
 class TutorialOrdemTests(TestCase):
-    """O tutorial mostra onde fica cada tela e o que precisa existir antes de quê."""
+    """O tutorial só ensina: mostra onde fica cada tela e o que vem antes de quê, sem ler o estado da escola."""
 
     def setUp(self):
         U = get_user_model()
@@ -143,33 +143,39 @@ class TutorialOrdemTests(TestCase):
         self.client.force_login(usuario)
         return self.client.get("/ajuda/")
 
-    def test_sistema_vazio_ano_letivo_e_o_primeiro_e_matricula_fica_bloqueada(self):
-        from . import tutorial
-        itens = {i["chave"]: i for i in tutorial.lista_comece(self.adm, tutorial.estado())}
-        self.assertEqual(itens["ano"]["estado"], "fazer")
-        marcados = [k for k, i in itens.items() if i.get("proximo")]
-        self.assertEqual(marcados, ["escola"])  # só um "Faça agora": o primeiro da fila do administrador
-        self.assertEqual(itens["turma"]["estado"], "bloqueado")  # turma depende do ano letivo
-        self.assertEqual(itens["matricula"]["estado"], "bloqueado")
-        self.assertEqual([f["chave"] for f in itens["matricula"]["faltam"]], ["ano", "turma", "aluno"])
+    def test_tutorial_nao_mostra_estado_nem_pendencia_da_escola(self):
         r = self.pagina(self.adm)
-        self.assertContains(r, "Comece por aqui: a ordem certa")
-        self.assertContains(r, "Antes, faça o passo anterior")
-        self.assertContains(r, "Antes de começar, falta preparar:")
+        for estado in ("Faça agora", "Pronto</span>", "etapas prontas", "falta preparar", "Antes, faça o passo anterior", "🔒", "✔", "✖"):
+            self.assertNotContains(r, estado)
 
-    def test_depois_de_criar_ano_turma_e_aluno_a_matricula_libera(self):
+    def test_tutorial_e_igual_com_a_escola_vazia_ou_preenchida(self):
         from alunos.models import Aluno
         from matriculas.models import AnoLetivo, Turma
-        from . import tutorial
+        vazio = self.pagina(self.adm).content.decode()
         ano = AnoLetivo.objects.create(ano=2027, atual=True)
         Turma.objects.create(nome="Jardim I", ano_letivo=ano, turno="manha")
         Aluno.objects.create(nome="Lia Souza", data_nascimento="2022-03-01")
-        itens = {i["chave"]: i for i in tutorial.lista_comece(self.adm, tutorial.estado())}
-        for pronto in ("ano", "turma", "aluno"):
-            self.assertEqual(itens[pronto]["estado"], "ok")
-        self.assertEqual(itens["matricula"]["estado"], "fazer")
-        self.assertEqual(itens["mensalidades"]["estado"], "bloqueado")  # ainda depende da matrícula
-        self.assertEqual(tutorial.faltando(["ano", "turma", "aluno"]), [])
+        cheio = self.pagina(self.adm).content.decode()
+        import re
+        limpa = lambda h: re.sub(r'name="csrfmiddlewaretoken" value="[^"]+"', "", h)
+        self.assertEqual(limpa(vazio), limpa(cheio))
+
+    def test_ordem_mostra_o_que_cada_etapa_precisa_antes(self):
+        from . import tutorial
+        itens = {i["chave"]: i for i in tutorial.lista_comece(self.adm)}
+        self.assertEqual([f["chave"] for f in itens["matricula"]["precisa"]], ["ano", "turma", "aluno"])
+        self.assertEqual([f["chave"] for f in itens["turma"]["precisa"]], ["ano"])
+        self.assertEqual(itens["ano"]["precisa"], [])
+        r = self.pagina(self.adm)
+        self.assertContains(r, "A ordem certa das coisas")
+        self.assertContains(r, "Precisa antes de:")
+
+    def test_passo_de_matricula_lista_pre_requisitos_fixos(self):
+        r = self.pagina(self.sec)
+        self.assertContains(r, "Antes de começar, você precisa de:")
+        self.assertContains(r, "Menu → Matrículas → Nova matrícula")
+        self.assertContains(r, "Criar uma turma")
+        self.assertContains(r, "NÃO são criadas sozinhas")
 
     def test_secretaria_nao_ve_itens_so_de_administrador(self):
         r = self.pagina(self.sec)
@@ -177,28 +183,24 @@ class TutorialOrdemTests(TestCase):
         self.assertNotContains(r, "Criar um acesso")
         self.assertContains(self.pagina(self.adm), "Preencher os dados")
 
-    def test_familia_nao_recebe_mapa_nem_lista_de_preparacao(self):
+    def test_familia_nao_recebe_mapa_nem_ordem_de_preparacao(self):
         r = self.pagina(self.fam)
-        self.assertNotContains(r, "Comece por aqui")
+        self.assertNotContains(r, "A ordem certa das coisas")
         self.assertNotContains(r, "Onde fica cada coisa")
-        self.assertContains(r, "Onde fica:")  # mas sabe onde ficam calendário e fotos
+        self.assertContains(r, "Onde fica:")
 
     def test_mapa_tem_link_de_cada_modulo(self):
         r = self.pagina(self.sec)
         for rota in ("/alunos/", "/matriculas/", "/frequencia/", "/financeiro/", "/documentos/", "/administracao/"):
             self.assertContains(r, f'href="{rota}"')
 
-    def test_passo_de_matricula_mostra_onde_fica_e_o_que_falta(self):
-        r = self.pagina(self.sec)
-        self.assertContains(r, "Menu → Matrículas → Nova matrícula")
-        self.assertContains(r, "Criar uma turma")
-        self.assertContains(r, "NÃO são criadas sozinhas")
-
-    def test_tela_de_nova_matricula_avisa_o_que_falta(self):
+    def test_tela_de_nova_matricula_continua_avisando_o_que_falta(self):
+        from . import tutorial
         self.client.force_login(self.sec)
         r = self.client.get("/matriculas/nova/")
         self.assertContains(r, "Antes de matricular, falta preparar:")
         self.assertContains(r, "Criar uma turma")
+        self.assertEqual([f["chave"] for f in tutorial.faltando(["ano", "turma", "aluno"])], ["ano", "turma", "aluno"])
 
     def test_tela_de_nova_matricula_sem_aviso_quando_tudo_existe(self):
         from alunos.models import Aluno
@@ -214,3 +216,47 @@ class TutorialOrdemTests(TestCase):
         AnoLetivo.objects.create(ano=2027, atual=True)
         self.client.force_login(self.sec)
         self.assertContains(self.client.get("/frequencia/"), "Criar uma turma")
+
+
+class FaixaDeAjudaTests(TestCase):
+    """A faixa "Primeira vez por aqui?" do painel some depois do 5º login."""
+
+    def setUp(self):
+        self.u = get_user_model().objects.create_user("lia", password="x")
+
+    def login_e_painel(self):
+        self.client.post("/sair/")
+        self.client.post("/entrar/", {"username": "lia", "password": "x"})
+        return self.client.get("/painel/")
+
+    def test_faixa_aparece_do_1o_ao_5o_login_e_some_no_6o(self):
+        from .models import TutorialVisto
+        for n in range(1, 6):
+            r = self.login_e_painel()
+            self.assertEqual(TutorialVisto.objects.get(usuario=self.u).logins, n)
+            self.assertContains(r, "Primeira vez por aqui", msg_prefix=f"login {n}")
+        r = self.login_e_painel()
+        self.assertEqual(TutorialVisto.objects.get(usuario=self.u).logins, 6)
+        self.assertNotContains(r, "Primeira vez por aqui")
+        self.assertNotContains(r, "Abrir o tutorial")
+
+    def test_menu_ajuda_continua_depois_do_5o_login(self):
+        for _ in range(7):
+            r = self.login_e_painel()
+        self.assertContains(r, 'href="/ajuda/"')
+        self.assertContains(self.client.get("/ajuda/"), "Como usar o sistema")
+
+    def test_cada_pessoa_tem_a_propria_contagem(self):
+        outro = get_user_model().objects.create_user("beto", password="x")
+        for _ in range(6):
+            self.login_e_painel()
+        self.client.post("/sair/")
+        self.client.post("/entrar/", {"username": "beto", "password": "x"})
+        self.assertContains(self.client.get("/painel/"), "Primeira vez por aqui")
+
+    def test_concluir_o_tutorial_nao_esconde_a_faixa_antes_do_5o_login(self):
+        from .models import TutorialVisto
+        self.login_e_painel()
+        self.client.post("/ajuda/concluir/")
+        self.assertIsNotNone(TutorialVisto.objects.get(usuario=self.u).visto_em)
+        self.assertContains(self.client.get("/painel/"), "Primeira vez por aqui")

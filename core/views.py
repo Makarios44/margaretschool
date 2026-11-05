@@ -5,6 +5,7 @@ from django.conf import settings
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.static import serve
 
@@ -46,7 +47,7 @@ class EscolaLoginView(LoginView):
         """Primeiro acesso: leva ao tutorial de boas-vindas (se o login não veio de um link específico)."""
         destino = super().get_success_url()
         user = self.request.user
-        if user.is_authenticated and not self.get_redirect_url() and not TutorialVisto.objects.filter(usuario=user).exists():
+        if user.is_authenticated and not self.get_redirect_url() and not TutorialVisto.visto_por(user):
             return reverse("ajuda") + "?primeira=1"
         return destino
 
@@ -64,6 +65,7 @@ def dashboard(request):
             status__in=[SolicitacaoPreMatricula.Status.RECEBIDA, SolicitacaoPreMatricula.Status.EM_ANALISE]
         ).count()
     return render(request, "dashboard.html", {
+        "mostrar_faixa_ajuda": TutorialVisto.mostrar_faixa(request.user),
         "proximos": proximos_eventos(6, interno=request.user.is_staff),
         "pre_pendentes": pendentes,
     })
@@ -90,7 +92,7 @@ def midia(request, caminho):
 @login_required
 def ajuda(request):
     """Tutorial passo a passo. Com ?primeira=1 e ainda não visto, abre como boas-vindas."""
-    visto = TutorialVisto.objects.filter(usuario=request.user).exists()
+    visto = TutorialVisto.visto_por(request.user)
     return render(request, "ajuda.html", {
         "passos": tutorial.passos(request.user),
         "perfil_nome": tutorial.NOMES[tutorial.perfil(request.user)],
@@ -102,5 +104,8 @@ def ajuda(request):
 @require_POST
 def ajuda_concluir(request):
     """Marca o tutorial como visto (concluir ou pular) e leva ao painel."""
-    TutorialVisto.objects.get_or_create(usuario=request.user)
+    acompanhamento, _ = TutorialVisto.objects.get_or_create(usuario=request.user)
+    if acompanhamento.visto_em is None:
+        acompanhamento.visto_em = timezone.now()
+        acompanhamento.save(update_fields=["visto_em"])
     return redirect("dashboard")
