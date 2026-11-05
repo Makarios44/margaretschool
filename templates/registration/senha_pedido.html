@@ -1,0 +1,16 @@
+{% extends "registration/_base.html" %}
+{% block title %}Esqueci minha senha | Margaret School{% endblock %}
+{% block titulo %}Esqueci minha senha{% endblock %}
+{% block corpo %}
+<p class="text-secondary mb-4">Digite o e-mail cadastrado na escola. Se ele existir, enviaremos um link para você criar uma senha nova.</p>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% if form.email.errors %}<div class="alert alert-danger" role="alert">Digite um e-mail válido.</div>{% endif %}
+  <div class="mb-4">
+    <label for="id_email" class="form-label">E-mail</label>
+    <input type="email" name="email" id="id_email" class="form-control form-control-lg" autocomplete="email" autofocus required value="{{ form.email.value|default:'' }}">
+  </div>
+  <button type="submit" class="btn btn-primary btn-lg w-100">Enviar o link</button>
+</form>
+<p class="small text-secondary mt-3 mb-0">Não tem e-mail cadastrado? Peça à secretaria para trocar a sua senha.</p>
+{% endblock %}

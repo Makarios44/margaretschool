@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}E-mail | Margaret School{% endblock %}
+{% block content %}
+<section class="container py-4" style="max-width:760px">
+  <div class="page-bar"><h1 class="page-title">E-mail da plataforma</h1>
+    <a class="btn btn-outline-primary" href="{% url 'adm_usuarios' %}">Usuários</a></div>
+  {% if configurado %}
+    <div class="alert alert-success"><i class="bi bi-check-circle" aria-hidden="true"></i> O envio de e-mails está configurado.</div>
+  {% else %}
+    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <strong>E-mails ainda não configurados.</strong> Por enquanto as mensagens só aparecem no log do servidor e <strong>ninguém recebe nada</strong>. Cadastre <code>RESEND_API_KEY</code> (ou os dados SMTP) nas variáveis do servidor.</div>
+  {% endif %}
+  <div class="panel mb-4">
+    <dl class="mb-0">
+      <dt>Forma de envio</dt><dd>{{ backend }}</dd>
+      <dt>Remetente</dt><dd class="mb-0">{{ remetente }}</dd>
+    </dl>
+  </div>
+  <form method="post" class="panel">
+    {% csrf_token %}
+    <h2 class="h5">Enviar e-mail de teste</h2>
+    <label class="form-label" for="destino">Para</label>
+    <input class="form-control mb-3" type="email" id="destino" name="destino" value="{{ request.user.email }}" required>
+    <button class="btn btn-primary" type="submit">Enviar teste</button>
+  </form>
+</section>
+{% endblock %}

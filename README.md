@@ -297,3 +297,10 @@ tar czf arquivos-$(date +%F).tar.gz media midia_privada
 Para restaurar: `pg_restore --clean --no-owner --dbname "$DATABASE_URL" margaret-AAAA-MM-DD.dump`.
 
 # margaretschool
+
+## Recuperação de senha e e-mails
+
+- **Esqueci minha senha** (tela de entrada): a pessoa informa o e-mail e recebe um link válido por 24 h, de uso único. A resposta na tela é sempre a mesma (não revela se o e-mail existe) e há limite de 1 pedido por minuto por e-mail.
+- **Convite por e-mail**: em Administração → Usuários → Novo usuário, marque “Enviar convite por e-mail”; a pessoa cria a própria senha. Na lista, “Enviar link de senha” reenvia o link.
+- **Administração → E-mail** mostra se o envio está configurado e manda um e-mail de teste (também: `python manage.py enviar_email_teste destino@exemplo.com`).
+- Configuração (variáveis de ambiente): `RESEND_API_KEY` + `DEFAULT_FROM_EMAIL` (recomendado na Railway, pois a Railway bloqueia SMTP fora do plano Pro), ou `EMAIL_HOST`/`EMAIL_PORT`/`EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD`. Sem nada configurado, os e-mails só aparecem no log. O domínio do remetente precisa estar verificado no provedor (Resend).

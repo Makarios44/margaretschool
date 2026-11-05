@@ -165,7 +165,7 @@ class UsuariosTests(Base):
 
     def test_criar_com_cada_perfil(self):
         for perfil, staff, superu in [("familia", False, False), ("secretaria", True, False), ("admin", True, True)]:
-            r = self.client.post(reverse("adm_usuario_novo"), self.dados(username=f"u_{perfil}", perfil=perfil))
+            r = self.client.post(reverse("adm_usuario_novo"), self.dados(username=f"u_{perfil}", perfil=perfil, email=f"{perfil}@x.com"))
             self.assertEqual(r.status_code, 302, perfil)
             u = User.objects.get(username=f"u_{perfil}")
             self.assertEqual((u.is_staff, u.is_superuser, u.is_active), (staff, superu, True))

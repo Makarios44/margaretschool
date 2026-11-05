@@ -5,3 +5,4 @@ psycopg[binary]>=3.2      # driver do PostgreSQL
 dj-database-url>=2.2      # lê DATABASE_URL
 whitenoise>=6.7           # serve os arquivos estáticos
 gunicorn>=23.0; sys_platform != "win32"   # servidor de aplicação (Linux)
+django-anymail>=12.0        # envio de e-mail por API (Resend)

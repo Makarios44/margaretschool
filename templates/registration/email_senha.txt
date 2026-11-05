@@ -1,0 +1,14 @@
+Olá, {{ usuario.get_full_name|default:usuario.username }}!
+
+{% if convite %}A {{ escola }} criou um acesso para você no portal. Seu usuário para entrar é: {{ usuario.username }}
+
+Para criar a sua senha, abra o link abaixo:{% else %}Recebemos um pedido para criar uma senha nova no portal da {{ escola }}. Seu usuário é: {{ usuario.username }}
+
+Para criar a senha nova, abra o link abaixo:{% endif %}
+
+{{ link }}
+
+O link vale por {{ horas }} horas e só pode ser usado uma vez.
+{% if not convite %}Se não foi você quem pediu, ignore esta mensagem: nada muda na sua conta.
+{% endif %}
+{{ escola }}

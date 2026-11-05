@@ -56,6 +56,9 @@ class UsuarioForm(BootstrapFormMixin, forms.ModelForm):
     perfil = forms.ChoiceField(label="Perfil de acesso", choices=PERFIS, widget=forms.RadioSelect)
     password1 = forms.CharField(label="Senha", widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}), required=False)
     password2 = forms.CharField(label="Repita a senha", widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}), required=False)
+    enviar_convite = forms.BooleanField(
+        label="Enviar convite por e-mail (a pessoa cria a própria senha)", required=False,
+        help_text="Se marcar, não precisa digitar senha: a pessoa recebe um link por e-mail para criá-la.")
 
     class Meta:
         model = User
@@ -69,11 +72,11 @@ class UsuarioForm(BootstrapFormMixin, forms.ModelForm):
         self.criando = self.instance.pk is None
         self.fields["perfil"].widget.attrs["class"] = "form-check-input"
         if self.criando:
-            self.fields["password1"].required = True
-            self.fields["password2"].required = True
+            self.fields["password1"].required = False
+            self.fields["password2"].required = False
             self.initial.setdefault("perfil", "secretaria")
         else:
-            del self.fields["password1"], self.fields["password2"]
+            del self.fields["password1"], self.fields["password2"], self.fields["enviar_convite"]
             self.initial["perfil"] = perfil_do_usuario(self.instance)
 
     def clean(self):
@@ -84,8 +87,19 @@ class UsuarioForm(BootstrapFormMixin, forms.ModelForm):
                 self.add_error("perfil", "Você não pode tirar o seu próprio acesso de administrador.")
             elif ultimo_administrador(self.instance):
                 self.add_error("perfil", "Este é o único administrador. Torne outro usuário administrador antes.")
+        email = (d.get("email") or "").strip()
+        if email and User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            self.add_error("email", "Já existe um usuário com este e-mail.")
         if self.criando:
             s1, s2 = d.get("password1"), d.get("password2")
+            if d.get("enviar_convite"):
+                if not email:
+                    self.add_error("email", "Informe o e-mail para enviar o convite.")
+                return d
+            if not s1:
+                self.add_error("password1", "Digite uma senha ou marque “Enviar convite por e-mail”.")
+            if not s2 and s1:
+                self.add_error("password2", "Repita a senha.")
             if s1 and s2 and s1 != s2:
                 self.add_error("password2", "As senhas não são iguais.")
             elif s1:
@@ -103,7 +117,10 @@ class UsuarioForm(BootstrapFormMixin, forms.ModelForm):
         usuario.is_superuser = perfil == "admin"
         usuario.is_staff = perfil in ("admin", "secretaria")
         if self.criando:
-            usuario.set_password(self.cleaned_data["password1"])
+            if self.cleaned_data.get("enviar_convite"):
+                usuario.set_unusable_password()
+            else:
+                usuario.set_password(self.cleaned_data["password1"])
         if commit:
             usuario.save()
         return usuario

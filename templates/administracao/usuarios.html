@@ -4,6 +4,7 @@
 <section class="container py-4">
   <div class="page-bar"><h1 class="page-title">Usuários</h1>
     <div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-primary" href="{% url 'administracao' %}">Administração</a>
+      <a class="btn btn-outline-primary" href="{% url 'adm_email' %}"><i class="bi bi-envelope" aria-hidden="true"></i> E-mail</a>
       <a class="btn btn-primary" href="{% url 'adm_usuario_novo' %}"><i class="bi bi-person-plus" aria-hidden="true"></i> Novo usuário</a></div></div>
   <div class="table-responsive"><table class="table table-ms align-middle">
     <thead><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Último acesso</th><th>Situação</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
@@ -14,6 +15,7 @@
         <td class="text-end">
           <a class="btn btn-outline-primary btn-sm" href="{% url 'adm_usuario_editar' u.pk %}">Editar</a>
           <a class="btn btn-outline-primary btn-sm" href="{% url 'adm_usuario_senha' u.pk %}">Redefinir senha</a>
+          {% if u.email and u.is_active %}<form method="post" action="{% url 'adm_usuario_link' u.pk %}" class="d-inline">{% csrf_token %}<button class="btn btn-outline-primary btn-sm" type="submit">Enviar link de senha</button></form>{% endif %}
           <form method="post" action="{% url 'adm_usuario_ativo' u.pk %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-primary{% endif %}" type="submit">{% if u.is_active %}Desativar{% else %}Reativar{% endif %}</button></form>
         </td></tr>{% endfor %}</tbody></table></div>
   <p class="form-text">Usuários desativados não conseguem entrar, mas o histórico deles (quem emitiu documentos, por exemplo) é mantido.</p>

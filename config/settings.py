@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "anymail",
     "core",
     "alunos",
     "matriculas",
@@ -189,6 +190,28 @@ if not DEBUG:
     X_FRAME_OPTIONS = "DENY"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 60 * 60 * 10  # 10 horas: um dia de trabalho na secretaria
+
+# ---- E-mail -------------------------------------------------------------
+# Ordem de escolha: RESEND_API_KEY (API por HTTPS, funciona na Railway em qualquer plano)
+# -> EMAIL_HOST (SMTP; a Railway só libera SMTP no plano Pro) -> console (só mostra no log).
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Margaret School <nao-responda@margaretschool.com.br>")
+SERVER_EMAIL = os.environ.get("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
+EMAIL_TIMEOUT = 15
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # link de senha vale 24 horas
+if os.environ.get("RESEND_API_KEY"):
+    EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+    ANYMAIL = {"RESEND_API_KEY": os.environ["RESEND_API_KEY"]}
+elif os.environ.get("EMAIL_HOST"):
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ["EMAIL_HOST"]
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+    EMAIL_USE_SSL = _sim("EMAIL_USE_SSL", False)
+    EMAIL_USE_TLS = not EMAIL_USE_SSL and _sim("EMAIL_USE_TLS", True)
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_CONFIGURADO = not EMAIL_BACKEND.endswith("console.EmailBackend")
 
 # Logs no console (o servidor/serviço de hospedagem recolhe a saída).
 LOGGING = {

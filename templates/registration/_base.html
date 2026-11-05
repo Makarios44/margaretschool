@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body_class %}page-login{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="login-wrap">
+  <aside class="login-side">
+    <a href="{% url 'home' %}" aria-label="Voltar à página inicial">
+      <img src="{% static 'img/logo.png' %}" alt="Margaret School" class="login-logo" width="260">
+    </a>
+    <p class="login-side-text">{% block lateral %}Vamos resolver isso juntos.{% endblock %}</p>
+  </aside>
+  <section class="login-panel">
+    <div class="login-box">
+      <h1 class="login-title">{% block titulo %}{% endblock %}</h1>
+      {% block corpo %}{% endblock %}
+      <a class="d-inline-block mt-4 back-link" href="{% url 'login' %}">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i> Voltar para entrar
+      </a>
+    </div>
+  </section>
+</div>
+{% endblock %}

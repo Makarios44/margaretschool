@@ -1,9 +1,11 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import Count, ProtectedError, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from core.emails import enviar, enviar_link_senha
 from core.mixins import staff_required, superuser_required
 from matriculas.models import AnoLetivo, Matricula, Turma
 
@@ -155,8 +157,15 @@ def usuario_form(request, pk=None):
     usuario = get_object_or_404(User, pk=pk) if pk else None
     form = UsuarioForm(request.POST or None, instance=usuario, editor=request.user)
     if request.method == "POST" and form.is_valid():
+        criando = usuario is None
         usuario = form.save()
-        messages.success(request, f"Usuário {usuario.username} salvo.")
+        if criando and form.cleaned_data.get("enviar_convite"):
+            if enviar_link_senha(request, usuario, convite=True):
+                messages.success(request, f"Usuário {usuario.username} criado. Convite enviado para {usuario.email}.")
+            else:
+                messages.warning(request, f"Usuário {usuario.username} criado, mas o e-mail não saiu. Confira a página E-mail da Administração e use “Enviar link de senha” na lista.")
+        else:
+            messages.success(request, f"Usuário {usuario.username} salvo.")
         return redirect("adm_usuarios")
     return _form_generico(
         request, form, "Editar usuário" if usuario else "Novo usuário", "adm_usuarios",
@@ -175,6 +184,41 @@ def usuario_senha(request, pk):
         return redirect("adm_usuarios")
     return _form_generico(request, form, f"Redefinir senha — {usuario.get_full_name() or usuario.username}", "adm_usuarios",
                           "A senha antiga deixa de valer imediatamente.")
+
+
+@superuser_required
+@require_POST
+def usuario_link(request, pk):
+    usuario = get_object_or_404(User, pk=pk)
+    if not usuario.email:
+        messages.error(request, f"{usuario.username} não tem e-mail cadastrado. Edite o usuário e informe o e-mail.")
+    elif not usuario.is_active:
+        messages.error(request, "Este usuário está desativado.")
+    elif enviar_link_senha(request, usuario, convite=not usuario.has_usable_password()):
+        messages.success(request, f"Link de senha enviado para {usuario.email}.")
+    else:
+        messages.error(request, "Não foi possível enviar o e-mail. Veja a página E-mail da Administração.")
+    return redirect("adm_usuarios")
+
+
+@superuser_required
+def email_status(request):
+    if request.method == "POST":
+        destino = request.POST.get("destino", "").strip() or request.user.email
+        if not destino:
+            messages.error(request, "Informe um e-mail de destino.")
+        else:
+            try:
+                enviar("Teste de e-mail – Margaret School",
+                       "Se você recebeu esta mensagem, o envio de e-mails do portal está funcionando.", None, [destino])
+                messages.success(request, f"E-mail de teste enviado para {destino}.")
+            except Exception as erro:
+                messages.error(request, f"O envio falhou: {erro}")
+        return redirect("adm_email")
+    return render(request, "administracao/email.html", {
+        "configurado": settings.EMAIL_CONFIGURADO, "backend": settings.EMAIL_BACKEND,
+        "remetente": settings.DEFAULT_FROM_EMAIL,
+    })
 
 
 @superuser_required

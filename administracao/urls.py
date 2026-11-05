@@ -23,5 +23,7 @@ urlpatterns = [
     path("usuarios/novo/", views.usuario_form, name="adm_usuario_novo"),
     path("usuarios/<int:pk>/editar/", views.usuario_form, name="adm_usuario_editar"),
     path("usuarios/<int:pk>/senha/", views.usuario_senha, name="adm_usuario_senha"),
+    path("usuarios/<int:pk>/link-senha/", views.usuario_link, name="adm_usuario_link"),
+    path("email/", views.email_status, name="adm_email"),
     path("usuarios/<int:pk>/ativo/", views.usuario_ativo, name="adm_usuario_ativo"),
 ]

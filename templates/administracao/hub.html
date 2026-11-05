@@ -11,6 +11,7 @@
     {% if user.is_superuser %}
     <div class="col-md-6 col-lg-4"><a class="module module-green" href="{% url 'adm_escola' %}"><i class="bi bi-building" aria-hidden="true"></i><h3>Dados da escola</h3><p>CNPJ, direção, atos oficiais, multa e juros, cidade do calendário.</p></a></div>
     <div class="col-md-6 col-lg-4"><a class="module module-yellow" href="{% url 'adm_usuarios' %}"><i class="bi bi-person-lock" aria-hidden="true"></i><h3>Usuários</h3><p>Quem pode entrar, com qual perfil, e redefinição de senhas.</p>{% if n_usuarios %}<span class="badge-ok">{{ n_usuarios }} ativo{{ n_usuarios|pluralize }}</span>{% endif %}</a></div>
+    <div class="col-md-6 col-lg-4"><a class="module module-blue" href="{% url 'adm_email' %}"><i class="bi bi-envelope-at" aria-hidden="true"></i><h3>E-mail</h3><p>Veja se o envio de e-mails está ligado e mande um teste.</p></a></div>
     {% endif %}
   </div>
 </section>
